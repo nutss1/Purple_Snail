@@ -1,24 +1,46 @@
-var express = require('express'); // Creates a variable that contains 'express' functions
-var app = express();		  // Set variable 'app' to express constructor
-var fs = require('fs');		  // Create a file system object, lets you call file system functions
-var http = require('http');	  // Create http object, lets you call http functions
-app.use(express.static('public'));// Allows you to load files from the 'public' directory
+var express = require('express'); 
+var app = express();		  
+var fs = require('fs');		  
+var https = require('https'); // https now	  
+var ip = require("ip");
 
+var privateKey = fs.readFileSync('key.pem', 'utf8');
+var certificate = fs.readFileSync('certificate.pem', 'utf8');
 
-app.get('/index.html', function (req, res) { 
-	   res.sendFile( __dirname + "/" + "index.html" ); // if we get http://127.0.0.1:8033/index.html, load index.html
+var cred = {key: privateKey, cert: certificate};
 
-})
+const rootDir='/tmp/releases/';    
 
-app.get('/process_get', function (req, res) {		   // if we get http://127.0.0.1:8033/process_get (from html submit)	
-	var file = fs.createWriteStream("sample.txt");
-	http.get("http://127.0.0.1:8033/new/sample.txt", function(response) {response.pipe(file);}); 
-
-})
+function getNewest() { // returns newest file path in /tmp/releases
 	
-var server = app.listen(8033, function () {
-	var host = server.address().address
-	var port = server.address().port
-	console.log("Example app listening at http://%s:%s", host, port)
-	
-})
+	var files = fs.readdirSync(rootDir); 
+
+	files.sort(function(a, b) { // sorting algorithm
+               return fs.statSync(rootDir + a).mtime.getTime() - 
+                      fs.statSync(rootDir + b).mtime.getTime();
+	});
+
+	var newest = files[files.length-1];
+	return (rootDir+newest);
+}
+
+app.get('/process', function (req, res) { // if we get http://.../process
+	var content;
+	var files;
+
+	fs.readFile(getNewest(), function read(err, data) {
+    		if (err) {
+        		throw err;
+    		}
+  		content = data; // data contains content of sampleN.bin from rootDir
+   		console.log(content);
+    		res.writeHead(200, {'Content-Type': 'application/binary'});
+    		res.end(content, 'binary'); // write the content in binary
+	});
+});
+
+var httpsServer = https.createServer(cred, app);
+httpsServer.listen(8033, ip.address());
+//httpsServer.listen(8033, '10.20.16.152');
+alert('App is listening at https://' + ip.address() + ':8033');
+//console.log('Listening at https://' + '10.20.16.152' + ':8033');
