@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-​
+
 '''
 publish rpm files to repo
 '''
-​
+
 from __future__ import print_function
 import sys, os
 import argparse
@@ -12,7 +12,8 @@ import subprocess
 import publish_utils
 import re
 import fnmatch
-​
+import sqlite3
+
 def get_args(args):
     parser = argparse.ArgumentParser(description="RPM publishing script")
     parser.add_argument('svnrev', help="SVN revision of RPM to publish")
@@ -24,24 +25,64 @@ def get_args(args):
     parser.add_argument('--osver', help="OS version to release to if not F20",
                         default="20")
     return parser.parse_args(args)
-​
-​
+
+
+def checkDB(name, version):
+    with open('database.txt') as f:
+        content = f.readlines()
+
+    content = [x.strip('\n') for x in content]
+    
+    for i in list(range(len(content))):
+        out = [] 
+        out += content[i].split(" ")
+        if (out[0] == name) and (out[1] == version):
+            return 1
+    
+
+    return 0
+
 def main():
     '''main code'''
     exit_code = 0
     args = get_args(sys.argv[1:])
     repo_str = os.path.join(publish_utils.REPO_BASE, args.repo,
                             "fedora-%s/" %args.osver)
-​
+
     # glob all the files
+
+    
+    conn = sqlite3.connect('database.db')
+    conn.text_factory = str
+    c = conn.cursor()
+
+    found_blocked = 0;
+    
     rpm_files = []
     for rpmd in publish_utils.RPM_DIRS:
         sys.stderr.write("Walking %s for files matching %s-*-%s.fc%s.*.rpm\n" %(rpmd, args.rpmname, args.svnrev, args.osver))
+        #if (checkDB(args.rpmname, args.ver) == 1):
+        
+        c.execute("SELECT name FROM database")
+        nameList = c.fetchall()
+    
+        c.execute("SELECT version FROM database")
+        versionList = c.fetchall()
+
+        for ite in list(range(len(nameList))):
+            if (nameList[ite][0] == args.rpmname) and (versionList[ite][0] == args.ver):
+                sys.stderr.write("\n%s-%s is blocked!\n" %(args.rpmname, args.ver))
+                found_blocked = 1
+                break
+        if found_blocked:
+            sys.exit(exit_code)
         for root, dirs, files in os.walk(rpmd):
             for filename in fnmatch.filter(files, '%s-%s-%s.fc%s.*.rpm' %(args.rpmname, args.ver, args.svnrev, args.osver)):
                 rpm_files.append(os.path.join(root, filename))
     sys.stderr.write("Found {} RPMS: {}\n".format(len(rpm_files),rpm_files))
-​
+    
+    
+
     for rpmf in rpm_files:
         sys.stderr.write("SCP {} to {}\n".format(rpmf,repo_str))
         cmd = ["scp", rpmf, "ctxswbld@edsrepo.morphodetection.com:%s" %repo_str]
@@ -52,14 +93,14 @@ def main():
         sys.stderr.write("WARNING: Did not find any RPM files matching the string: %s-%s-%s.fc%s.*.rpm\n"
               %(args.rpmname, args.ver, args.svnrev, args.osver))
         sys.exit(exit_code)
-​
+
     try:
         publish_utils.update_repo(repo_str)
         sys.stderr.write("Moved %s rpm file(s) to %s\n" % (args.rpmname, repo_str))
     except Exception as e:
         exit_code = 1
         sys.stderr.write(e.__str__())
-​
+
     if args.ver == '*':
         # We need to extract a version out of the list somehow
         # We will just use the first entry we find - it should be good enough.
@@ -70,8 +111,9 @@ def main():
         sys.stdout.write("{}".format(res.group(0)))
     else:
         sys.stdout.write("{}".format(args.ver))
-​
+
     sys.exit(exit_code)
-​
+
 if __name__ == "__main__":
-main()
+    main()
+
