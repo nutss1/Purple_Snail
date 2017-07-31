@@ -27,21 +27,6 @@ def get_args(args):
     return parser.parse_args(args)
 
 
-def checkDB(name, version):
-    with open('database.txt') as f:
-        content = f.readlines()
-
-    content = [x.strip('\n') for x in content]
-    
-    for i in list(range(len(content))):
-        out = [] 
-        out += content[i].split(" ")
-        if (out[0] == name) and (out[1] == version):
-            return 1
-    
-
-    return 0
-
 def main():
     '''main code'''
     exit_code = 0
