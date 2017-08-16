@@ -166,3 +166,208 @@
 
 # **Overview**
 The figure below describes the hardware layout with the new architecture
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/1.PNG "Logo Title Text 1")
+The concept of a single highly available data store is replaced with a NAS pool. Each NAS in the pool has HDD’s configured in a redundant RAID setup and all the NASes together are treated as a redundant storage. The NAS pool is effectively a Redundant Array of Inexpensive NASes(RAIN).
+
+A high level illustration of how the redundancy is achieved is described below.
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/2.PNG "Logo Title Text 1")
+Similarly, when a bag is read.
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/3.PNG "Logo Title Text 1")
+Sequence of interactions between the various parts.
+
+##### **14.1.1.1 Database Sequence**
+- Database is configured with a set of COTS Servers with lots of storage. These are the NASes – our applications use http to access file data rather than traditional network filesystems.
+- Database procedures are modified to provide a pair of NAS targets from the RAIN for any write.
+- Database provides the same pair of NAS targets for a corresponding read – the two NAS target will be referred to as a NAS-set. (A corresponding read means read access of the same bag from a UI computer.)
+- Database is responsible for tracking the NAS-set associated with a bag at all times. This approach effectively provides us with a RAID10 (both striping and mirroring).data redundancy at the bag level We will refer to this datastore as a RAIN
+- When a NAS is completely offline, the database has the metadata to recreate the lost data into a new/replaced NAS. A process (called RAIN-Maker) can then be scheduled by an FSE to re-populate the data to the new NAS when the failed NAS is replaced.  This can be scheduled to run automatically at off-peak hours.
+
+##### **14.1.1.2 Active TRI - Sequence**
+- Scanner saves the bag to an in-memory storage queue (how the bag is removed from memory is described below)
+- Scanner, in parallel starts writing the bag to the NAS set. 
+- Scanner updates database with bag status=INSPECTED without waiting for the save to complete
+- The database now has the http path to the bag on each NAS
+- Active TRI (via BagLib) polls database for bags with status=INSPECTED
+- Once BagLib finds a bag, it gets the bag path from the database and locks the bag with status=TRI_INSPECTING
+- BagLib checks if the scanner has the bag in memory
+- If yes, bag is fetched from memory to the TRI. Parallel fetches from different TRIs is possible and will be supported
+- If no, BagLib uses the NAS to retrieve the bag (both functional & error usecases described below)
+- TRI updates database with bag decision and clears bag
+
+Bag status is modified to TRI-INSPECTED at this point.
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/4.PNG "Logo Title Text 1")
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/5.PNG "Logo Title Text 1")
+
+The figure above describes the flow of data to the Active TRI.
+
+##### **14.1.1.3 Passive TRI - Sequence**
+- Passive TRI (via BagLib) polls database for bags with status=TRI_INSPECTED, PTRI_VIEWED or ERROR within a given time window (and other query constraints like scanner wildcard)
+- A bag from the displayed list is selected by the user
+- BagLib fetches the bag from the NAS set using the bag path
+- TRI displays the bag
+
+ ![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/6.PNG "Logo Title Text 1")
+ ![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/7.PNG "Logo Title Text 1")
+The figure above describes the flow of data to the Passive TRI.
+
+##### **14.1.1.4 Scanner - Sequence**
+- On receiving machine decision, the scanner has the complete bag. It submits the bag to the BagLib.
+- BagLib writes the bag to a in-memory circular-queue (of fixed size which can be configured on a per-scanner-model basis)
+- Bag is marked with a timestamp at this point (where? In the db? Is this the state=INSPECTED part?)
+- BagLib starts writing to the NAS set in the background
+- BagLib is listening on a socket for incoming requests for bags based on bag-guid (the unique bag key)
+- When a request is received, BagLib fetches the bag from the circular-queue, locks the bag in memory and starts a timer
+- Once the bag has been successfully sent out, the bag is unlocked
+- If the timer fires before the bag has been successfully sent out, this is because of communication issues. BagLib terminates connection and unlocks the bag (a warning is sent out to CI that the bag was not persisted in any NAS)
+- Bags are automatically overwritten when the queue limit is reached – the oldest bags from the queue are deleted first. Bags will be timed out aggressively if the scanner is not able to send the bags over to a NAS. These bags will not be persisted and therefore will not be available for a Passive TRI. Future enhancements may have the bag stored locally for a short period of time.
+
+The size of the queue and the values of the timers have to be worked out and maybe customized based on the scanner’s estimated throughput. Bags stay cached for the longest time possible – the current load on the scanner drives the deletion times of the bags from the queue. It is therefore possible that bags can be cached for a longer time during low throughput hours & at shift ends.
+
+The figure below describes the high-level interactions.
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/8.PNG "Logo Title Text 1")
+
+##### **14.1.1.5 NAS offline - Sequence**
+- Monitoring thread on each NAS checks every other NAS for read/write status
+- If a NAS fails any of the tests, the thread disables the NAS from the database. The NAS also sends a notification to CI about the malfunctioning NAS.
+- All new bag writes (and therefore reads) will stop using this NAS till it is marked online again through either an automatic resolution of a transient issue in the network or NAS or through manual intervention by the FSE
+- When the NAS reappears online, the monitoring thread starts monitoring this NAS
+- If read/write tests succeed, the NAS is re-initiated into the pool of available NASes in the database
+- The database starts using this NAS when it provides NAS sets to different scanners
+
+**Note:**	Any redundant data lost due to the failure of the NAS will not be automatically duplicated. See 2.1.2.6 for the requirements on the tool for the FSE to schedule the rebuilding of redundancy so it can be executed at a time that will limit the impact it has on airport operations.
+
+##### **14.1.1.6 Database Recovery - Sequence**
+- Recovery tool is told to recover a selected NAS
+
+**Note:**	At this point, it is assumed that the faulty NAS has been replaced with a functional one of similar performance or better
+- Recovery tool queries the database for all bags related to this NAS
+- Each bag is associated with a NAS set
+- Recovery tool selects the second path in the NAS set and copies over the data from the second path to the replaced NAS
+- At the end of this process, the data redundancy has been restored
+- Tool is manual for the FSE to initiate when needed.
+- Tool has a schedule feature that allows the FSE to schedule how long the tool can run. 
+
+###### **14.1.1.6.1 Limitations**
+- As in a RAID, loss of two NASes within a given window may result in data loss. This presupposes that both the NAS hardware and the NAS drives are beyond recovery at this point.
+- During the period where a failed NAS has not been discovered, a few bags may not be redundant. The database will mark them as being archived on just one NAS.
+
+##### **14.1.1.7 Incomplete Bag Write Handling**
+- There is a possibility that a bag is still in the process of being written when a TRI/PTRI attempts to access it from one of the NAS set. The scenario is this:
+    - Scanner sends the bag over to the NAS set
+    - Scanner removes the bag from its queue due to its current load
+    - TRI follows the protocol – first trying the scanner and then going to the NAS where the bag may still be in the process of being written. This will cause the TRI to attempt loading a partial bag.
+
+The approach to this use-case is to provide a flag on the database that the bag has been written successfully on at least one NAS. When the TRI attempts to load a bag & finds the NAS flag set, it will attempt to load the bag from the NAS, else it will unlock the bag and move it to the TRI_WAITING state. The bag will stay in this state till a NAS has completed writing the data to disk – once this is complete, NAS will change the bag’s state to INSPECTED.
+
+The next TRI which queries the db will find this bag, look for the state INSPECTED and attempt to load it only if the flag is set.
+
+If the flag is never set, the bag will be timed out by the bag cleanup monitoring (which will mark this bag as timed-out so that no TRI loads this bag – this is the same functionality that exists today)
+
+The figure below describes the software interactions between the scanner, the NAS and the TRI.
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/9.PNG "Logo Title Text 1")
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/10.PNG "Logo Title Text 1")
+
+## **14. Database Schema**
+The lookup tables are index-organized with rows representing values to which other rows of non-lookup tables are pointing.  The lookup tables are created and populated when the database management system starts up from the DB configuration file.  The lookup tables could be seen as ”static” because they are modified only in rare occasion (adding a new type of machine for example) and are identical across data centers.
+
+The administrative tables are created from MUX configuration files or by an administrator through the Supervisor Control Interface. They represent the five entities around which information is manipulated: user (human), machine (sensors), host (computer), application (software) and bag. The administrative records hold information on which machine or computer is connected to the system, which software is authorized to run, where to find the bag data, and who is able to do what.  The administrative tables are unique to each data center.
+
+The dynamic tables are a collection of records that control and report the status of machines, software applications and bags. Records are created from administrative tables for machines and software applications when the database management system starts up. Bags and decision records are inserted on new bag and new decision events. Each new bag event generates a bag record in a generic table and another in bag-machine specific table. There are as many bag-machine specific tables as type of sensors connected to the system.
+
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/11.PNG "Logo Title Text 1")
+
+## **15. Lookup tables**
+The lookup tables are index-organized tables with rows stored in primary key order. They are created from database configuration files depending of the release version of the database.
+
+### **15.1 Bag Status**
+The status of a bag going through a CTX and requiring On Screen Resolution follows sequential steps (Figure 2). The BAG_STATUS_TAB holds the various status of a bag. Each status allows or blocks actions from specific subsystems that translate in a set of rules for the subsystems. For example, inspection subsystems process only bags reconstructed, TRI subsystem display only bag already inspected. The table could be extended to include bag status for other sensors like XRD…
+
+#### **15.1.1 BAG_STATUS_TAB Schema**
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/12.PNG "Logo Title Text 1")
+
+#### **15.1.2 Bag Status Diagram**
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/13.PNG "Logo Title Text 1")
+
+#### **15.1.3 Example of BAG_STATUS_TAB**
+| INDEX  | STATUS  |  DESCRIPTION |   
+|---|---|---|
+|  0 |  NEW |  Bag has been created in the system (most of the time because it has been loaded into a machine). It is the default value when the Bag Record is created. |   
+|  1 |  ACQUIRING |  Acquisition started to acquire data for the bag. |   
+|  2 |  RECONSTRUCTING |  Reconstruction of the bag has started. |  
+|  3 |  ACQUIRED |  Acquisition is done with the bag |   
+|  4 |  RECONSTRUCTED |  Reconstruction of the bag is done. Bag folder is available and ready for inspection. |   
+|  5 |  INSPECTING |  Inspection started  |  
+|  6 |  INSPECTED |  Inspection is done with the bag. Inspection results have been written under the bag folder and the inspection decision is available. Operator decision will be rendered after On Screen Resolution by TRI. |   
+|  7 | TRI_INSPECTING  |  The bag is being displayed to an operator or queued in one of the TRI |
+|  8 |  TRI_INSPECTED | An operator has resolved the bag. The decision has been written under the bag folder. Inspection decision is available. Operator decision is available and is suspect (clear bags are Done). The overall bag decision will be rendered after PTRI inspection.  |  
+|  9 |  PTRI_VIEWING |  The bag is being displayed to an operator in one of the PTRI |   
+|  10 |  DONE |  Done with the bag (CTX-9800). The overall bag decision is available. The bag data and associated records will be deleted in 48h. |   
+|  11 | CTX_FAULT  |  A failure occurs when scanning the bag or the bag has been flushed from the machine without being scanned. There is no bag decision available. See BAG_ERROR_TAB for fault description. |  
+|  12 |  RECON_ERROR |  The bag data is corrupted preventing reconstruction. There is no bag decision available. See BAG_ERROR_TAB for possible error description. |   
+|  13 |  INSP_ERROR |  The bag data is corrupted or cannot be found preventing inspection. Inspection (machine) decision is Error and the overall bag decision is Error. See BAG_ERROR_TAB for error description. |   
+|  14 |  TRI_ERROR |  The bag data is corrupted or cannot be found preventing on screen resolution. Inspection (machine) decision is available and operator decision is Error. The overall bag decision is Error. See BAG_ERROR_TAB for error description. |  
+|  15 |  TIMED_OUT | The Bag Maximum Travel Time (BMTT) or Guaranteed Operator View Time (GOVT) expired. Inspection (machine) decision shall be available and operator decision is Unknown. The overall bag decision is Unknown.  |   
+|  ... |   |   |   
+|  100 |  XRD_SCAN |  XRD is scanning |   
+|  101 | XRD_INSPECTING  |  XRD inspection started |  
+|  ... |   |   |  
+
+### **15.2 BAG ERROR**
+During the life of the bag, the various subsystems processing it could fail. In this case, the bag status is set to error or fault and additional information (error code, text…) corresponding to the failure are held in the BAG_ERROR_TAB (See Error Event Models).
+
+#### **15.2.1 BAG_ERROR_TAB Schema**
+| FIELDS  | DATA TYPE  | DESCRIPTION  |  SOURCE |   
+|---|---|---|---|
+|  INDEX |  INTEGER |  Index of bag error (Primary Key) | Database configuration file   |   
+|  ERROR_CODE |  INTEGER |  Internal error code | Database configuration file   |   
+| ERROR_TEXT  |  CHAR [24] |  Corresponding text (human readable) |  Database configuration file  |   
+|  DESCRIPTION |  VARCHAR [120] |  Bag error description: Used for diagnostic purpose, FSE support…  |   Database configuration file |   
+
+#### **15.2.2 Example of BAG_ERROR_TAB**
+|  INDEX |  ERROR_CODE |  ERROR_TEXT | DESCRIPTION  |   
+|---|---|---|---|
+|  0 |  0 |   |   |   
+|  1 |  1 |   |   |   
+|  ... |   |   |   |   
+|  100 | 1100  |   |   |   
+|  101 | 1101  |   |   |   
+|  102 | 1102  |   |   |   
+|  103 | 1103  |   |   |   
+|  ... |   |   |   |   
+|  200 |  1200 |   |   |   
+|  ... |   |   |   |   
+|  301 |  1301 |   |   |   
+|  302 |  1302 |   |   |   
+|  303 |  1303 |   |   |   
+|  ... |   |   |   |   
+|  400 |  1400 |   |   |   
+|  401 |  1401 |   |   |   
+|  402 |  1402 |   |   |   
+|  ... |   |   |   |   
+|  500 |  1500 |   |   |   
+|  501 |  1501 |   |   |   
+|  502 |  1502 |   |   |   
+|  503 |  1503 |   |   |   
+|  ... |   |   |   |   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
