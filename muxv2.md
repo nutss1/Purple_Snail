@@ -55,7 +55,7 @@
 | SRD968 | **3.2 Data Center** |     |
 | SRD1108 | The data center is the central part of the MuxV2 system. |    Information |
 | SRD1112 | The data center shall be composed of two parts, a postgres database and data storage system. Figure 1 belows shows an overview of the data center and it's interfaces. |  Requirement|
-| SRD1120 |  |     |
+| SRD1120 | ![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/1120.PNG "Logo Title Text 1") Figure 1 |   |
 | SRD1109 | **3.2.1 Database**|     |
 | SRD969 | The postgres database of the data center shall interface with the system components shown in Figure 1 providing fast access capability. |  Requirement   |
 | SRD1121 | It shall also be a gateway to the data storage for bag data retrieval for use by Active Threat Resolution Interfaces (ATRIs) and Passive Threat Resolution Interfaces (PTRI).  | Information    |
@@ -140,7 +140,7 @@
 | SRD1087 | The data center should store username and their associated attributes in an LDAP (Lightweight Directory Access Protocol) format. |  Optional Requirement   |
 | SRD1184 | The Authentication library should provide flexability to interface with Security Technology Integrated Program (STIP) used for remote maintenance monitoring. |  Optional Requirement   |
 | SRD1177 | Figure 2 below shows an overview of the authentication process. |  Information   |
-| SRD1179 |  |   Information  |
+| SRD1179 | ![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/1179.PNG "Logo Title Text 1")|   Information  |
 | SRD1180 | Figure 2 |  Information   |
 | SRD1172 | **12. Authorization** |     |
 | SRD994 | a. The system shall provide Manager access level.. |  Requirement   |
