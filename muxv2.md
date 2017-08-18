@@ -636,14 +636,34 @@ The administrative tables are created from Mux configuration files (DB, Machines
 The BAG_ADMIN_TAB holds information on where the image data and eventually raw data are stored on the data center. The storage path has a UNIX and Windows version depending on which OS/platform is accessing the path but it must point to the same location. To ensure uniqueness of bag across multiple databases, each database is identified by a unique number, which is used to generate a Global Unique Identifier for a bag. 
 
 #### **16.1.1	BAG_ADMIN_TAB Schema**
-|   |   |   |   |   
+|  FIELDS | DATA TYPE  |  DESCRIPTION |  SOURCE |   
+|---|---|---|---|
+|  BAG_DB_ID |  BYTE |  Identify the Data Center on which bags are stored with a unique number. Use to create a unique Bag Key across multiple Databases. For each TIP volume a unique number is also created  | DB Configuration or Administrator  |   
+|  BAG_DB_IPS (TBD) |  INETD [3] |  If needed: static IP addresses of the servers running the database (primary, secondary, virtual?). | DB Configuration or Administrator  |   
+|  BAG_PATH_PFIX_UNIX |  CHAR [120] | Prefix Path to the image bag folder on the data store for Unix Platform  | DB Configuration or Administrator  |   
+|  BAG_PATH_PFIX_WIN |  CHAR [120] | Prefix Path to the image bag folder on the data store for Windows Platform  |  DB Configuration or Administrator |   
+|  BAG_RPATH_PFIX_UNIX | CHAR [120]  | Prefix Path to the raw bag folder on the data store for Unix Platform  |  DB Configuration or Administrator |   
+|  BAG_RPATH_PFIX_WIN | CHAR [120]  | Prefix Path to the raw bag folder on the data store for Windows Platform  |  DB Configuration or Administrator |   
+|  ... |   |   |   |   
+
+#### **16.1.2	Example of BAG_ADMIN_TAB**
+The following is an example of a record holding information for bags registered with database number #1, which can be accessed by using the virtual IP @ 10.2.3.100 or primary server @ 10.2.3.101 or secondary server @ 10.2.3.102 (TBD). All bag folders are found under the bag directory, with subdirectories image or raw. To get the directory size reasonable, another layer of 31 subdirectories (one per day) could eventually be added (new field required TBD).  
+The following records hold information for TIP bags belonging to volume 1 and 2.
+|  BAG_DB_ID |  BAG_DB_IPS |  BAG_PATH_PFIX_UNIX | BAG_PATH_PFIX_WIN  | BAG_RPATH_PFIX_UNIX  | BAG_RPATH_PFIX_WIN  |
+|---|---|---|---|---|---|
+|  1 |  10.2.3.100 10.2.3.101 10.2.3.102 |  /net/10.2.3.100/bag/image/ | \net\10.2.3.100\bag\image\  |  /net/10.2.3.100/bag/raw/ |  \net\10.2.3.100\bag\raw\ |
+|  2 |  10.2.3.100 10.2.3.101 10.2.3.102 |  /net/10.2.3.100/tip/vol1 |  \net\10.2.3.100\tip\vol1 |   |   |
+|  3 |  10.2.3.100 10.2.3.101 10.2.3.102 |  /net/10.2.3.100/tip/vol2 | \net\10.2.3.100\tip\vol2  |   |   |
+
+### **16.2	MACHINE ADMINISTRATION**
+The MACH_ADMIN_TAB holds information on which machine is, was or will be connected to the data center.
+
+#### **16.2.1	MACH_ADMIN_TAB Schema**
+| FIELDS  |  DATA TYPE |  DESCRIPTION |  SOURCE |   
 |---|---|---|---|
 |   |   |   |   |   
 |   |   |   |   |   
 |   |   |   |   |   
-
-
-
 
 
 
