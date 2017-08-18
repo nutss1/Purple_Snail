@@ -326,41 +326,321 @@ During the life of the bag, the various subsystems processing it could fail. In 
 #### **15.2.2 Example of BAG_ERROR_TAB**
 |  INDEX |  ERROR_CODE |  ERROR_TEXT | DESCRIPTION  |   
 |---|---|---|---|
-|  0 |  0 |   |   |   
-|  1 |  1 |   |   |   
+|  0 |  0 |  NONE |  No Error |   
+|  1 |  1 |  FLUSH | Bag Flushed Before Acquisition (status=CTX_FAULT)  |   
 |  ... |   |   |   |   
-|  100 | 1100  |   |   |   
-|  101 | 1101  |   |   |   
-|  102 | 1102  |   |   |   
-|  103 | 1103  |   |   |   
+|  100 | 1100  | ACQ_NO  | No Acquisition. Start Acquisition acknowledgement is missing (status=CTX_FAULT)  |   
+|  101 | 1101  |  ACQ_INCOMP |  Incomplete Acquisition. End Acquisition acknowledgement is missing (status=CTX_FAULT) |   
+|  102 | 1102  | ACQ_BADDATA  |  Bad data coming from DCB encoder count… (status=CTX_FAULT) |   
+|  103 | 1103  | ACQ_CHOCK  |  Acquisition Buffer Full (status=CTX_FAULT) |   
 |  ... |   |   |   |   
-|  200 |  1200 |   |   |   
+|  200 |  1200 |  RECON_CORRUPT |  Cannot Reconstruct. Corrupted Raw data (status=RECON_ERROR) |   
 |  ... |   |   |   |   
-|  301 |  1301 |   |   |   
-|  302 |  1302 |   |   |   
-|  303 |  1303 |   |   |   
+|  301 |  1301 |  INSP_CORRUPT |  Cannot Inspect. Corrupted image data (status =INSP_ERROR) |   
+|  302 |  1302 |  INSP_NOTFOUND |  Bag not found on the central store (status=INSP_ERROR) |   
+|  303 |  1303 | INSP_WARNING  |  Slippage (status=INSP_ERROR) |   
 |  ... |   |   |   |   
-|  400 |  1400 |   |   |   
-|  401 |  1401 |   |   |   
-|  402 |  1402 |   |   |   
+|  400 |  1400 |  TRI_CORRUPT |  Cannot Display. Corrupted image data (status=TRI_ERROR) |   
+|  401 |  1401 |  TRI_NOTFOUND |  Bag not found on the central store (status=TRI_ERROR) |   
+|  402 |  1402 |  TRI_THRTCORRUPT |  Cannot Display Threat. Corrupted inspection results (status=TRI_ERROR) |   
 |  ... |   |   |   |   
-|  500 |  1500 |   |   |   
-|  501 |  1501 |   |   |   
-|  502 |  1502 |   |   |   
-|  503 |  1503 |   |   |   
+|  500 |  1500 |  IQ_FAULT | Not an IQ Bag (status=INSP_ERROR)  |   
+|  501 |  1501 |  IQ_STRAIGHT |  IQ Bag Not Straight (status=INSP_ERROR) |   
+|  502 |  1502 |  IQ_WRONGSIZE |  IQ Bag Wrong Size (width, length…) (status=INSP_ERROR) |   
+|  503 |  1503 |  IQ_NOTFOUND |  IQ Bag data not found on the central store (status= INSP_ERROR) |   
 |  ... |   |   |   |   
 
+### **15.3 DECISION**
+The DECISION_TAB holds the possible decisions that are passed to the BHS system through the Airport Interface subsystem. Note the distinction between Pending, No, Unknown and Error decisions. 
+Pending decision is the default bag decision when registered in the database. 
+No decision means that a decision cannot be expected for the bag. The bag has not been scanned correctly and data is missing. The bag status is either CTX_FAULT or RECON_ERROR. 
+Error decision occurs when the decision processors like inspection or TRI cannot render a clear or suspect decision. The bag status is either INSP_ERROR or TRI_ERROR.  
+Unknown decision means that a timer has expired, either Bag Maximum Travel Time (BMTT) or Guaranteed Operator View Time (GOVT). The corresponding bag status is TIMED_OUT.
+Today, there is no requirement for having the PTRI rendering a clear or suspect decision. The “Viewed” decision is reserved for acknowledging the fact that an operator looked at the bag.
+
+#### **15.3.1 DECISION_TAB Schema**
+|  FIELDS |  DATA TYPE |  DESCRIPTION | SOURCE  |   
+|---|---|---|---|
+|  INDEX |  INTEGER |  Index of decision (Primary Key) |  Database configuration file  |   
+|  DECISION |  CHAR [24] |  Corresponding text (human readable) |  Database configuration file  |   
+| DESCRIPTION  |  VARCHAR [120] |  Description of decision.   |  Database configuration file  |   
+#### **15.3.2 Example of DECISION_TAB**
+|  INDEX |  DECISION |  DESCRIPTION |
+|---|---|---|
+|  0 |  PENDING | Decision is still pending (default value)  |
+|  1 |  NO | No decision available  |
+|  2 |  CLEAR |  Clear decision available |
+|  3 |  SUSPECT |  Suspect decision available |
+|  4 |  UNKNOWN_BMTT |  Bag Maximum Travel Time (BMTT) timed out operator decision is unknown |
+|  5 |  UNKNOWN_GOVT |  Guaranteed Operator View Time (GOVT) timed out operator decision is unknown |
+|  6 |  ERROR |  Decision cannot be render due to decision processor errors (Inspection, TRI…) |
+|  7 |  IQ_SUCCESS | Successful IQ Test   |
+|  8 |  IQ_FAIL |  Failed IQ Test  |
+|  9 |  VIEWED | Eventually needed for PTRI if Clear/suspect not required  |
+|  ... |   |   |
 
 
+### **15.4 INSTALL STATE**
+The INSTALL_TAB holds the physical install states of machines and computers. It permits to keep references to machines and computers that have been removed or taken offline and plan for future system extension. 
 
+#### **15.4.1 INSTALL_TAB Schema**
+|  FIELDS |  DATA TYPE | DESCRIPTION  |  SOURCE |
+|---|---|---|---|
+|  INDEX | INTEGER  |  Index of installation state (Primary Key) | Database configuration file   |   
+|  INSTALL_STATE | CHAR [24]  |  Corresponding text (human readable) |  Database configuration file  |   
+|  DESCRIPTION | VARCHAR [120]  |  Install state description: describes what the state means physically  |  Database configuration file  |   
 
+#### **15.4.2 Example of INSTALL_TAB**
+|  INDEX |  INSTALL_STATE |  DESCRIPTION |
+|---|---|---|
+|  0 | FUTURE  |  Installation planned in the future (placeholder) |   
+|  1 |  OPERATIONAL | Operational  |   
+|  2 |  NON_OPERATIONAL |  Not in Operation but physically present |   
+|  3 |  DECOMMISSIONED |  Physically Removed |   
+|  ... |   |   |   
 
+### **15.5 MACHINE TYPE**
+The MACH_TYPE_TAB holds the type of machines allowed to connect to the system. The type of machine is used to find out in which bag-machine specific table the bag record has been inserted (see BAG_TAB).
 
+#### **15.5.1	MACH_TYPE_TAB Schema**
+|  FIELDS | DATA TYPE  | DESCRIPTION  | SOURCE  | 
+|---|---|---|---|
+|  INDEX |  INTEGER |  Index of machine type (Primary Key)  |  Database configuration file  |   
+|  TYPE |  CHAR [24] |  Corresponding text (human readable) |  Database configuration file  |   
+|  SENSOR |  CHAR [24] |  Sensor type for the machine  |  Database configuration file  |   
+|  DESCRIPTION |  VARCHAR [120] |  Machine type description  |  Database configuration file  |   
 
+#### **15.5.2 Example of MACH_TYPE_TAB**
+|  INDEX |  TYPE |  SENSOR |  DESCRIPTION |   
+|---|---|---|---|
+|  0 |  9800 |  CTX |  CTX-9800 EDS sensor third generation |   
+|  1 |  9400 |  CTX |  CTX-9400 EDS sensor second generation |   
+|  2 |  9000 |  CTX |  CTX-9000 EDS sensor first generation |   
+|  3 |  X500 |  CTX |  CTX-2500 and CTX-5500 EDS sensor first generation |   
+|  4 |  2800 |  CTX |  CTX-2800 EDS sensor third generation |   
+|  5 |  3500 |  XRD |  XDR-3500  |   
+|  ... |   |   |   |   
 
+### **15.6 MACHINE STATUS**
+Each machine follows a state diagram (Figure 3). The MACH_STATUS_TAB holds the various states for the machine. Only CTX-9800 states are represented but the table can be extended to include specific state for other sensors.
 
+#### **15.6.1 MACH_STATUS_TAB Schema**
+|  FIELDS |  DATA TYPE |  DESCRIPTION |  SOURCE |   
+|---|---|---|---|
+|  INDEX |  INTEGER |  Index of machine status (Primary Key) | Database configuration file  |   
+|  STATUS |  CHAR [24] | Corresponding text (human readable)  |  Database configuration file |   
+|  DESCRIPTION |  VARCHAR [120] |  Status description: describes main tasks performed by the machine in this state |  Database configuration file |   
 
+#### **15.6.2 Machine Status Diagram**
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/14.PNG "Logo Title Text 1")
 
+#### **15.6.3	Example of MACH_STATUS_TAB**
+|  INDEX |  STATUS |  DESCRIPTION |      
+|---|---|---|
+|  0 |  SHUTDOWN |  Power can be turned off |      
+|  1 |  ALIVE |  Machine Control computer and application is up and running. Acquisition computer should be on but communication between acquisition and machine control subsystems has not yet been established.  |      
+|  2 |  ON |  The Start Command has been sent from the Control Interface. The Green Button is lit and the GB timer has started. SDS commands must be cleared. |   
+|  3 |  STARTUP |  The Green Button has been pressed. Interlock and ESTOP circuits are closed. The machine startup sequence has started, applying power to the Servo, Gantry (Slip-ring)… Communication between Machine Control and Acquisition subsystems is established. |      
+|  4 |  FLUSH |  Bags inside the machine are flushed |      
+|  5 |  WARMUP |  Tube Warm-up sequence has started |   
+|  6 |  FAULT |  The machine is in fault; the corresponding error code for the machine is set. |      
+|  7 |  RESET |  A fault reset from the Control Interface has been initiated or the auto recovery sequence has started, |      
+|  8 |  READY | The machine is empty and ready to accept new bag  |   
+|  9 |  OFFSET |  The offset calibration sequence has started |      
+|  10 |  GAIN |  The gain calibration sequence has started |      
+|  11 |  DIEBACK |  The exit conveyor is not ready preventing unload of bags |   
+|  12 |  STANDBY |  The machine is empty and a standby command has been initiated from the Control Interface or the automatic idle timer has expired |      
+|  13 |  CHOCKING |  Recon subsystem is chocking. Acquisition buffer is almost full. Machine Control may pause preventing new bag in the machine or under the X-ray zone. |      
+|  14 |  SCAN |  The machine is loading, scanning and unloading bags |   
+|  ... |   |   |      
+
+### **15.7 MACHINE OPERATIONAL MODE** 
+The MACH_OPER_TAB holds the various operational modes for the machine.  The machine can be controlled remotely (from the Control Interface through commands) or locally. A key switch gives local control of the machine to perform basic operations like calibration/diagnostic, IQ testing or even starting conveyor mode if the network is not available.
+
+#### **15.7.1	MACH_OPER_TAB Schema**
+|  FIELDS |  DATA TYPE |  DESCRIPTION |  SOURCE |   
+|---|---|---|---|
+|  INDEX |  INTEGER |  Index of operation mode (Primary Key) | Database configuration file |   
+|  OPER_MODE |  CHAR [24] |  Corresponding text (human readable) |  Database configuration file |
+|  DESCRIPTION |  VARCHAR [120] |  Operational mode description: describes condition of utilization  |  Database configuration file  |  
+
+#### **15.7.2	Example of MACH_OPER_TAB**
+|  INDEX |  OPER_MODE |  DESCRIPTION |      
+|---|---|---|
+|  0 |  REMOTE_SCAN |  Regular Scan Mode (Control is given to the SCI through Commands)  |     
+|  1 |  REMOTE_IQ | IQ Mode Controlled from SCI  |   
+|  2 |  REMOTE_CVM | Conveyor Mode Controlled from SCI  |  
+|  3 |  REMOTE_FSE | Field Service Mode or Machine Calibration Mode Controlled from SCI: CT Scale, Fan Offset, Image Tilt, and bad Detectors…  |     
+|  4 |  LOCAL_IQ |  Local Switch or Key is IQ Mode. Force the Machine in Standalone Mode (Exit and Entry Non-Integrated). Insertion of a bag is performed through a local Insert Push Button. |   
+|  5 |  LOCAL_CVM | Local Switch or Key is Conveyor Mode in case network is not available.  |    
+|  6 |  LOCAL_FSE | Local Switch or Key is FSE Mode. Machine Calibration is performed through a Field Service Workstation. |     
+|  ... |   |   |   
+
+### **15.8 MACHINE COMMAND**
+The MACH_CMD_TAB holds the various commands that can be initiated from the Control Interface when the operational mode of the machine has been set to remote.
+
+#### **15.8.1	MACH_CMD_TAB Schema**
+|  FIELDS |  DATA TYPE |  DESCRIPTION | SOURCE  |   
+|---|---|---|---|
+|  INDEX |  INTEGER | Index of machine command (Primary Key)   |  Database configuration file  |   
+|  COMMAND |  CHAR [24] |  Corresponding text (human readable) |  Database configuration file  |   
+|  DESCRIPTION |  VARCHAR [120] |  Command description: describes conditions for enabling the command |  Database configuration file  |   
+
+#### **15.8.2	Example of MACH_CMD_TAB**
+|  INDEX |  COMMAND |  DESCRIPTION |      
+|---|---|---|
+|  0 |  SHUTDOWN | Shutdown  |      
+|  1 |  START |  Start (available only in Alive state) |      
+|  2 |  RESTART | Restart (available only in Fault State)  |      
+|  3 |  FAULT_RESET | Fault Reset (available only in Fault State)  |      
+|  4 |  OFFSET_GAIN_CALIB |  Offset and Gain Calibration (available only in Ready, Scan or Standby State)  |      
+|  5 |  STANDBY | Standby (available only in Ready State)  |   
+|  6 |  INSERT |  Manual Insert of bag (available only if Entry is Non-Integrated) |      
+|  7 |  CVM_START |  REMOTE_CVM only |      
+|  8 |  CVM_STOP | REMOTE_CVM only  |   
+|  9 |  REDO_BAG_START |  REMOTE_FSE or REMOTE_IQ: Burn-in, IQ Bag Collect for CT Scale… |      
+|  10 | REDO_BAG_STOP  | REMOTE_FSE or REMOTE_IQ  |      
+|  11 | 5PIN_SCAN  | REMOTE_FSE: Fan Offset Setting  |  
+|  ...|   |   |
+
+### **15.9 MACHINE ERROR**
+When the machine is in fault state, the MACH_ERROR_TAB provides the corresponding error codes. The errors provided are just an example…
+
+#### **15.9.1	MACH_ERROR_TAB Schema**
+| FIELDS  |  DATA TYPE |  DESCRIPTION |  SOURCE |   
+|---|---|---|---|
+|  INDEX | INTEGER  |  Index of machine error (Primary Key) | Database configuration file   |  
+|  ERROR_CODE |  INTEGER | Internal error code  |  Database configuration file  |   
+|  ERROR_TEXT | CHAR [24]  |  Corresponding text (human readable) |  Database configuration file  |   
+|  DESCRIPTION |  VARCHAR [120] |  Machine error description: Used for diagnostic purpose, FSE support…  |   Database configuration file |   
+
+#### **15.9.2	Example of MACH_ERROR_TAB**
+| INDEX  |  ERROR_CODE |  ERROR_TEXT |  DESCRIPTION |   
+|---|---|---|---|
+|  0 |  0 |  NONE | No Error  |   
+|  1 |  101 |  OFFSET_ERR |  Offset Failure |   
+|  2 |  102 |  GAIN_ERR | Gain Failure  |   
+|  ... |   |   |   |   
+|  20 |  200 |  ACQ_NO |  No Acquisition  |   
+|   |  201 |  ACQ_INCOMP | Incomplete Acquisition  |   
+|   |  202 | ACQ_BADDATA  | Bad data coming from DCB (encoder count,…)  |   
+|   |  203 | ACQ_CHOCK  |  Acquisition Buffer Full (No Connection) |   
+|  ... |   |   |   |   
+|  30 |  300 |  HV_NRDY | HVPS On but Not Ready  |   
+|   |   301 | HV_OFF  |  Cannot Turn HV On |  
+|   |   302 | HEX_OFF  |  Cannot Turn Heat Exchanger On |
+|   |   303 |  XIL |  Interlock Open |
+|   |   304 |  ESTOP |  ESTOP pushed |
+|  ... |   |   |   |   
+|  40 |  400 | TUBE_ARC  |  Tube Arcing |   
+|   |  402 |  TUBE_MA_OVERLD |  MA Overload |   
+|   |  403 |  TUBE_KV_OVERLD | KV Overload  |   
+|   |  404 |  TUBE_FIL_OFF |  Filament Off |   
+|   |  405 |  TUBE_FIL_OVERLD |  Filament Overload |   
+|   |  406 |  TUBE_MA_DEV |  MA monitor below/above limit |   
+|   |  407 |  TUBE_KV_DEV |  KV monitor below/above limit |   
+|   |  408 |  TUBE_MA_MIS |  MA Reference Mismatch |   
+|   |  409 |  TUBE_KV_MIS | KV Reference Mismatch  |   
+|  ... |   |   |   |   
+|  50 |  500 | SERVO_OVERSP  | Over Speed |   
+|   |  501 |  SERVO_OVERCUR | Over Current  |   
+|  ... |   |   |   |   
+|  60 |  600 |  MC_POSF |  Position Following Error Band |   
+|   |  601 |  MC_INVG |  Invalid Gain Set |   
+|   |  602 | MC_STALL  |  Axis Stall Detected |   
+|  ... |   |   |   |   
+
+### **15.10	USER TYPE**
+The USER_TYPE_TAB holds the various levels or group for the system’s users. Each level comes with specific permissions that allows or denies access to view, control, administer and configure the various components of the system.
+
+#### **15.10.1	USER_TYPE_TAB Schema**
+|  FIELDS |  DATA TYPE |  DESCRIPTION |  SOURCE |   
+|---|---|---|---|
+|  INDEX |  INTEGER |  Index of user type (Primary Key) |  Database configuration file  |   
+|  TYPE |  CHAR [24] |  Corresponding text (human readable) |  Database configuration file  |   
+|  PERMISSION |  BYTE [2] | Permission setup for this type  |  Database configuration file  |   
+|  DESCRIPTION |  VARCHAR [120] |  User type description: describes what the user is able to do. |  Database configuration file  |   
+
+#### **15.10.2	Example of USER_TYPE_TAB**
+|  INDEX |  TYPE |  PERMISSION |  DESCRIPTION |   
+|---|---|---|---|
+|  0 |  GUEST |  00 |  Guest: View Only |   
+|  1 |  OPERATOR |  03 |  Operator: TRI and PTRI Login |   
+|  2 |  SUPERVISOR |  07 |  Supervisor: TRI, PTRI some SCI functionalities |   
+|  3 |  MANAGER |  0F |  Manager: TRI, PTRI All SCI functionalities except Mux Administration | 
+|  4 |  ADMINISTRATOR |  1F | All Permissions  |   
+|  5 |  GE_STAFF |  3F |  All Permissions + GE Diagnostic and Calibration Tools  |
+
+### **15.11	APPLICATION STATUS**
+As for machine, each application goes through different states that can be found in the APP_STATUS_TAB. From a system point of view, most applications need only to inform if they are running or not. In case of error or fault, the software application is restarted or the computer on which it runs power-cycled. The root of the error does not need to be reported to the system but will be analyzed using log files later on.
+
+#### **15.11.1	APP_STATUS_TAB Schema**
+|  FIELDS |  DATA TYPE  |  DESCRIPTION |  SOURCE |   
+|---|---|---|---|
+|  INDEX |  INTEGER |  Index of application status (Primary Key) |  Database configuration file  |   
+|  STATUS |  CHAR [24] |  Corresponding text (human readable) |  Database configuration file  |   
+|  DESCRIPTION | VARCHAR [120]  |  Application status description: describes mostly if the application is healthy or not |  Database configuration file  |   
+
+#### **15.11.2	Application Status Diagram**
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/15.PNG "Logo Title Text 1")
+
+#### **15.11.3	Example of APP_STATUS_TAB**
+|  INDEX |  STATUS |  DESCRIPTION |      
+|---|---|---|
+|  0 |  OFF | Application is not yet ready (default at startup)  |      
+|  1 |  READY | Application is Ready (Idle)  |     
+|  2 |  BUSY |  Application is Busy (Processing) |     
+|  3 |  ERROR | Application Self Detect Error  |      
+|  4 |  FAULT |  Application has been ruled as not running by the SCI because interval between heartbeats is greater that the maximum interval allowed for this application |     
+|  5 |  LOGGED_ON |  TRI and PTRI Only (Busy) |   
+|  6 |  LOGGED_OFF |  TRI and PTRI Only (Ready) |    
+|  ... |   |   |    
+
+### **15.12	APPLICATION TYPE**
+The APP_TYPE_TAB holds the definition of the applications authorized to run on the system. An application belongs to a subsystem group and could eventually be dependent from another application. Dependencies could come from certifications (inspection/reconstruction for example) or software compatibilities. 
+
+#### **15.12.1	APP_TYPE_TAB Schema**
+|  FIELDS | DATA TYPE  | DESCRIPTION  |  SOURCE |   
+|---|---|---|---|
+|  INDEX |  INTEGER |  Index of application type (Primary Key) | Database configuration file   |   
+|  TYPE |  CHAR [24] | Corresponding text (human readable)  | Database configuration file   |   
+|  SUBSYSTEM |  CHAR [24] | Subsystem group in which the application belongs  |  Database configuration file  |   
+|  DEPEND_ON | INTEGER  | Index of an application in which the application depends on.  |  Database configuration file  |   
+|  MAX_HB |  INTEGER | Maximum number of seconds allowed between heartbeats before the application is ruled as not running (application fault state). Not all applications residing in the machine need to report heartbeat (null value allowed).  |  Database configuration file  |   
+|  DESCRIPTION |  VARCHAR [120] |  Application description: describes certification status and dependencies. |  Database configuration file  |  
+
+#### **15.12.2	Example of APP_TYPE_TAB**
+| INDEX  | TYPE  |  SUBSYSTEM | DEPEND_ON  | MAX_HB  | DESCRIPTION  |
+|---|---|---|---|---|---|
+|  1 |  EV100 | INSPECTION  |  4 | 4  | Everest 100 Inspection depends on Recon V1 (certification) with a max interval of 4sec between heartbeats.  |
+|  2 |  EV75 | INSPECTION  | 5  |  6 | Everest 75 Inspection depends on Recon V2 (certification) with a max interval of 6sec between heartbeats.  |
+|  3 |  KOM | INSPECTION  | 4  |  10 |  ISA Inspection |
+|  4 |  RECON_V1 | RECON  |  0 |  5 |  Recon V1 |
+|  5 |  RECON_V2 | RECON  | 0  | 5  |  Recon V2 |
+|  6 |  IQ_V1 | IQ_TEST  | 4  |  10 | IQ Test V1  |
+|  7 |  IQ_V2 | IQ_TEST  |  5 |  10 |  IQ Test V2 |
+|  8 |  MC | MACH_CONTROL  | 0  |  0 |  Machine Control. No heartbeat (done by SM) |
+|  9 |  ACQ | ACQUISITION  | 8  | 0  |  Acquisition depends on Machine Control. No heartbeat (done by SM) |
+|  10 |  TRI | TRI  | 4  | 2  |  Active TRI Application |
+|  11 |  PTRI | PTRI  |  0 |  2 |  Passive TRI Application |
+|  12 |  BCA |  BAG_CLEANUP | 0  | 120  |  Bag Cleanup Application |
+|  13 | AI  | AIRPORT_INTERF  | 0  | 60  |  Airport Interface |
+|  14 | SM  |  SYSTEM_MONITOR | 8  |  5 |  System Monitor depends on Machine Control. SM reports machine’s heartbeat. |
+|  15 |  SCI |  SUPERVISOR_CONTROL_INTERFACE | 0  |  0 | SCI does not report heartbeat  |
+|  ... |   |   |   |   |   |
+
+## **16.	Administrative Tables**
+The administrative tables are created from Mux configuration files (DB, Machines, Hosts, Applications, Users) or by the Mux System Administrator through the Supervisor Control Interface. The SCI shall provide an interface allowing backup/restore of the administrative table to/from the Mux configuration files.
+
+### **16.1	BAG ADMINISTRATION**
+The BAG_ADMIN_TAB holds information on where the image data and eventually raw data are stored on the data center. The storage path has a UNIX and Windows version depending on which OS/platform is accessing the path but it must point to the same location. To ensure uniqueness of bag across multiple databases, each database is identified by a unique number, which is used to generate a Global Unique Identifier for a bag. 
+
+#### **16.1.1	BAG_ADMIN_TAB Schema**
+|   |   |   |   |   
+|---|---|---|---|
+|   |   |   |   |   
+|   |   |   |   |   
+|   |   |   |   |   
 
 
 
