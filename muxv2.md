@@ -661,11 +661,184 @@ The MACH_ADMIN_TAB holds information on which machine is, was or will be connect
 #### **16.2.1	MACH_ADMIN_TAB Schema**
 | FIELDS  |  DATA TYPE |  DESCRIPTION |  SOURCE |   
 |---|---|---|---|
-|   |   |   |   |   
-|   |   |   |   |   
-|   |   |   |   |   
+|  MACH_ID |  INTEGER |  DB Unique Machine ID (Primary key) | Record Creation  |   
+|  MACH_NAME |  CHAR [16] |  Machine’s Name |  Machines Configuration or Administrator |   
+|  MACH_ALIAS |  CHAR [24] |  Alias Name for the Machine |  Machines Configuration or Administrator |   
+|  MACH_TYPE |  INTEGER |  Index in MACH_TYPE_TAB |  Machines Configuration or Administrator |   
+|  MACH_LOCATION |  TEXT |  Physical location of the machine |  Machines Configuration or Administrator | 
+|  MACH_INSTALL |  INTEGER |  Indicates if the machine is operational or not, going to be installed in the future... Index in INSTALL_TAB. Record can be removed when decommissioned and all references are gone. |  Machines Configuration or Administrator |   
+|  MACH_MEMBERSHIP (TBD) |  INETD |  Data Center IP to which the machine belongs. This is a placeholder to capture eventually machine’s membership to a Data Centers. Note only one membership authorized per machine. | Machines Configuration or Administrator  | 
+|  ... |   |   |   |   
 
+#### **16.2.2	Example of MACH_ADMIN_TAB**
+In the following example, 2 operational CTX-9800 and 1 decommissioned CTX-2500 are registered with the database.
 
+| MACH_ID  | MACH_NAME  | MACH_ALIAS  | MACH_TYPE  | MACH_LOCATION  | MACH_INSTALL  | MACH_MEMBERSHIP  |
+|---|---|---|---|---|---|---|
+| ...  |   |   |   |   |   |   |
+| 22  | G101  | Cougar  | 0  | Terminal 1  | 0  |  10.2.3.100 |
+| 3  | M205  | Spider  | 3  | Lobby  | 2  |  10.2.3.100 |
+| 20  |  G123 | Tiger  | 0  | Terminal 1  | 0  |  10.2.3.100 |
+| ...  |   |   |   |   |   |   |
+
+### **16.3	HOST/COMPUTER ADMINISTRATION**
+The HOST_ADMIN_TAB holds information on which computer is, was or will be connected to the data center.
+#### **16.3.1	HOST_ADMIN_TAB Schema**
+|  FIELDS |  DATA TYPE |  DESCRIPTION |  SOURCE |   
+|---|---|---|---|
+|  HOST_ID |  INTEGER |  DB Unique Host ID (Primary key) |  Record Creation |   
+|  HOST_NAME |  CHAR [24] |  Host/computer Name |  Hosts Configuration or Administrator |   
+|  HOST_IP |  INETD |  Static IP Address (if any) Identifying the Host with the Data Center. | Hosts Configuration or Administrator  |   
+|  HOST_LOCATION |  TEXT | Physical host location  |  Hosts Configuration or Administrator |   
+|  HOST_INSTALL |  INTEGER |  Indicates if the computer is operational or not, going to be installed in the future... Index in INSTALL_TAB. Record can be removed when decommissioned and all references are gone. |  Hosts Configuration or Administrator |   
+|  MACH_ID |  INTEGER |  For host belonging to a machine. Index in MACH_ADMIN_TAB (null value allowed) |  Hosts Configuration or Administrator |   
+|  HOST_MEMBERSHIPS (TBD) |  INETD [10] |  List of Data Center IP to which the host belongs. This is a placeholder capture eventually host membership to multiple Data Centers.  |  Hosts Configuration or Administrator |   
+|  ... |   |   |   |   
+
+#### **16.3.2	Example of HOST_ADMIN_TAB**
+In the following example, 4 hosts/computers (PC1, SERV1, PC80, PC34) are registered with the database and operational.
+|  HOST_ID |  HOST_NAME |  HOST_IP |  HOST_LOCATION |  HOST_INSTALL |  MACH_ID |  HOST_MEMBERSHIPS |
+|---|---|---|---|---|---|---|
+|  ... |   |   |   |   |   |   |
+|  12 |  PC1 |  10.2.3.210 |  Control Room 1 |  0 |  0 |  10.2.3.100 |
+|  13 |  SERV1 |  10.2.3.299 |  Server Room 1 |  0 | 0  |  10.2.3.100 |
+|  14 |  PC80 |  10.2.3.380 |  Server Room 1 |  0 |  0 |  10.2.3.100 |
+|  20 |  PC34 |  10.2.3.101 |  MC-G101 |  0 |  22 |  10.2.3.100 |
+|  ... |   |   |   |   |   |   |
+
+### **16.4	APPLICATION ADMINISTRATION**
+The APP_ADMIN_TAB holds information on which software application is allowed to participate in the system. The application’s name is generated from the host name on which the application is running, the type and application’s instance number. The time out for the application defines the maximum number of seconds that the application has for processing a bag. For TRI application the time out is the Guaranteed Operator View Time or GOVT. When an application is retired, its activity flag is modified but the record stays in the table as long as it is referenced by other records (APP_DEC_TAB, APP_STATE_TAB, BAG_TAB).
+
+#### **16.4.1	APP_ADMIN_TAB Schema**
+|  FIELDS | DATA TYPE  | DESCRIPTION  |  SOURCE |   
+|---|---|---|---|
+|  APP_ID | INTEGER | DB Unique Application ID (Primary key)  | Record Creation  |   
+|  APP_NAME | CHAR [24]  | Full Name of Application. The full name is formed from HOST, TYPE and NUM fields (PC1_EV100_001)  |  Applications Configuration or Administrator |   
+|  APP_ALIAS | CHAR [24]  | Alias name for the application (i14.3.2…)  |   Applications Configuration or Administrator|  
+|  APP_HOST_ID | INTEGER  | Host Name on which the Application is running (PC1…) Index in HOST_ADMIN_TAB |  Applications Configuration or Administrator |   
+|  APP_TYPE | INTEGER  | Type of Application (EV100). Index in APP_TYPE_TAB  |  Applications Configuration or Administrator |   
+|  APP_NUM | INTEGER  | Instance Number of the Application.  |  Applications Configuration or Administrator |  
+|  APP_TIMEOUT | INTEGER  | Maximum number of seconds allocated to this application for processing a bag. For TRI it is the GOVT.|  Applications Configuration or Administrator |   
+|  APP_ACTIVE | BOOL  | Application is still Active (Yes/No). Record can be removed when the application is inactive and all references are gone.  |  Applications Configuration or Administrator |   
+|  ... |   |   |   |  
+
+#### **16.4.2	Example of APP_ADMIN_TAB**
+In the following example, 4 active applications are registered with the database: EV100 inspection instance #6 running on host PC80 with a maximum processing time of 10 seconds, Recon instance #2 running on SERV1 with a max of 20 seconds, TRI instance #15 running on PC1 with a GOVT of 60 seconds and Acquisition running on PC34 computer.
+
+|  APP_ID |  APP_NAME |  APP_ALIAS |  APP_HOST_ID |  APP_TYPE | APP_NUM  |  APP_TIMEOUT |  APP_ACTIVE |
+|---|---|---|---|---|---|---|---|
+|  ... |   |   |   |   |   |   |   |
+|  71 |  PC80_EV100_06 |  14.3.2 |  14 |  1 |  6 |  10 |  Yes |
+|  8 |  SERV1_RECON_02 |  6.2.0 |  13 |  4 |  2 |  20 |  Yes |
+|  45 |  PC1_TRI_15 | 3.2.2  |  12 |  10 |  15 |  60 |  Yes |
+|  4 |  PC34_SC_101 |  1.1.0 |  20 |  9 |  0 |  0 |  Yes |
+|  ... |   |   |   |   |   |   |   |
+
+### **16.5	USER ADMINISTRATION**
+The USER_ADMIN_TAB holds credential information on who is able to logon to the various user interfaces of the system. Each user belongs to a level/type that allows specific permissions. When a user is dismissed, its activity flag is modified but the record stays in the table as long as it is referenced by other records (APP_DEC_TAB, APP_STATE_TAB).
+
+#### **16.5.1	USER_ADMIN_TAB Schema**
+|  FIELDS |  DATA TYPE |  DESCRIPTION |  SOURCE |   
+|---|---|---|---|
+|  USER_ID | INTEGER  | DB Unique User ID (Primary key)  | Record Creation  |   
+|  USER_NAME | CHAR [16]  |  User’s Name | Users Configuration or Administrator or Manager or Supervisor   |   
+|  USER_TYPE | INTEGER  | User’s Access Level. Index in USER_TYPE_TAB.  | Users Configuration or Administrator or Manager or Supervisor   |   
+|  USER_PWD | INTEGER  | Encrypted Password for the User  | Users Configuration or Administrator or Manager or Supervisor   |   
+|  USER_ACTIVE | BOOL  | User is still active (Yes /No). Record can be removed when a user is inactive and all references are gone.  | Users Configuration or Administrator or Manager or Supervisor   |   
+|  ... |   |   |   |   
+
+#### **16.5.2	Example of USER_ADMIN_TAB**
+In the following example, 3 users are registered with the database: Joe is active and is part of GE_STAFF, Admin is an active Administrator while Jack is a simple operator who has been deactivated.
+
+|  USER_ID |  USER_NAME |  USER_TYPE |  USER_PWD |  USER_ACTIVE |
+|---|---|---|---|---|
+| ...  |   |   |   |   |
+| 12  | Joe  | 5  |  @#12%^$^ | Yes  |
+| 13  | Jack  | 1  | *44&)8*  | No  |
+| 14  | Admin  | 4  |  @#$22113 | Yes  |
+| ...  |   |   |   |   |
+
+# **17.	Dynamic Tables**
+The BAG_TAB holds information for at least 48 hours for all bags that have been registered with the data center.
+
+When a bag is loaded into a machine (9800, 9400, XRD…) belonging to the system (referenced by a record in MACH_ADMIN_TAB), a new bag event triggers the creation of bag record in the BAG_TAB and in the bag-machine specific table (BAG_CTX9800_TAB, BAG_CTX9400_TAB, BAG_XRD_TAB… see below).
+
+A bag is identified by the machine (MACH_ID), its ID (BAG_ID) and/or its tracking number (BAG_TRACK_NUM). Uniqueness of ID and tracking number is not guaranteed and duplicates are possible (for example, the same bag can be scanned with a 9800 and XRD or twice by the same machine). For each new bag event a unique identifier (BAG_KEY) is generated and can be used to reference the bag across data centers. The BAG_KEY generation uses the database number (BAG_DB_ID from BAG_ADMIN_TAB) to guarantee its uniqueness across multiple databases. 
+
+Each time a bag enters a machine 2 records (BAG_TAB and bag-machine specific table) must be inserted no matter if an existing record with the same (MACH_ID, BAG_ID, BAG_TRACK_NUM) already exist. In case a bag is scanned n times with the same id but a different tracking number (or vice versa), n*2 records will be inserted. If several records match the bag id or the tracking number, bag records reconciliation will need to be performed. Third party applications communicating through the Airport Interface use the bag id and/or the tracking number to access bag information. 
+
+The status of a bag follows sequential steps; each step allows or blocks actions from specific subsystems and translates in a set of rules. If the rule of a subsystem allows it to process a bag, it locks the record by promoting the bag status (BAG_STATUS), updates its reference (APP_ID) and the time the lock has been performed (APP_START_TIME). As a consequence it prevents concurrent subsystems to access the record but allow recovery of bags locked for too long (APP_TIMEOUT in the APP_ADMIN_TAB). When the subsystem finishes processing the bag, it promotes the status, which unlocks the record and makes it available for the next subsystem with the appropriate rule. In case of a fault or error, the BAG_ERROR will reference the corresponding error. 
+
+When the overall decision is rendered, the subsystem in charge (it depends on configuration modes) updates the bag decision (BAG_DECISION) and the bag status (BAG_STATUS) to DONE.
+
+#### **17.1.1	BAG_TAB Schema**
+|  FIELDS |  DATA TYPE |  DESCRIPTION |  UPDATE |  SOURCE |
+|---|---|---|---|---|
+|  BAG_KEY |  INTEGER | Global Unique Identifier (GUID). It is the bag Key unique across databases generated at record creation   | Record creation on new bag event  | GUID as Primary Key  |
+|  BAG_DB_ID | BYTE  | Identify the DB number in which the bag belongs. Bag folder paths are deduced from this number.  | Record creation  |  First byte in primary key. BAG_ADMIN_TAB |
+|  MACH_ID | INTEGER  | Machine ID. Index in MACH_ADMIN_TAB.   | CTX-MC/XRD/AT  | MACH_ADMIN_TAB  |
+|  BAG_ID | CHAR [16]  | Bag Identification Number. Self-Generated, or IATA Type.  |  CTX-MC/XRD/AT  | CTX-MC/XRX/AT (Self-Generated) or AI_BHS (IATA).   |
+|  BAG_TRACK_NUM | CHAR [24]  | BHS Tracking Number  | CTX-MC/XRD/AT  |  AI-BHS |
+|  BAG_STATUS | INTEGER  | Bag Status given by Subsystems to Lock/Unlock the bag. Index in BAG_STATUS_TAB | CTX-MC/XRD/AT, RECON, INSP, TRI, PTRI  | BAG_STATUS_TAB  |
+|  BAG_ERROR | INTEGER  |  Error Index in case of bag Fault or Error status. Index in BAG_ERROR_TAB | CTX-MC/XRD/AT, RECON, INSP, TRI, PTRI  |  BAG_STATUS_TAB |
+|  BAG_DECISION |  INTEGER | Overall decision for the bag. Index in DECISION_TAB | INSP or IQ or TRI or PTRI  | DECISION_TAB  |
+|  APP_ID | INTEGER  | Current Application ID that last Locked the Bag. Index in APP_ADMIN_TAB (null value allowed)  | CTX-MC/XRD/AT, RECON, INSP TRI, PTRI  | APP_ADMIN_TAB  |
+|  APP_START_TIME |  DATETIME | Date and Time (mm-dd-yy hh:mm:ss) when the bag has been locked by the current application. Use the Application time out and start time to detect orphan/stuck bag (null value allowed)  |  CTX-MC/XRD/AT, RECON, INSP TRI, PTRI | DB Clock  |
+
+#### **17.1.2	Example of BAG_TAB**
+In the following example, 3 bags are registered with the database. 
+
+Bag #12356 has IATA34 for bag id and T1769 tracking number. The bag has been through G101 and being currently inspected (since 7:33:16) by instance #6 of an EV100 inspection running on PC80.
+
+Bag #12357 has IATA99 for bag id and T1230 tracking number. The bag is in fault and no decision can be expected. Apparently, there was no acquisition running on PC34 when the bag went through G101. 
+
+Bag #14567 has IATA07 for bag id and no tracking number. The bag has been scanned by G123 and went thru on screen resolution with a final Clear decision.
+
+| BAG_KEY  | BAG_DB_ID  |  MACH_ID |  BAG_ID |  BAG_TRACK_NUM |  BAG_STATUS | BAG_ERROR | BAG_DECISION | APP_ID  | APP_START_TIME |
+|---|---|---|---|---|---|---|---|---|---|
+|  ... |   |   |   |   |   |   |   |   |   |   
+|  12356 |  1 |  22 |  IATA34 |  T1769 |  5 |  0 |  0 |  71 |  11-12-06 07:33:16 |   
+|  12357 |  1 |  22 |  IATA99 |  T1230 |  11 | 100  |  1 |  4 | 11-12-06 07:32:11  |   
+|  14567 |  1 |  20 |  IATA07 |  0 |  8 |  0 |  2 |  0 | 0  |   
+|  ... |   |   |   |   |   |   |   |   |   |   
+
+### **17.2	BAG MANAGEMENT CTX-9800 SPECIFIC**
+The BAG_CTX9800_TAB holds information for at least 48 hours for all bags that have been loaded into a CTX9800 machine belonging to the system.
+
+When a bag is loaded into a CTX9800 and acknowledged by the machine control subsystem, a new bag event triggers the creation of a record in the BAG_TAB and a record in the BAG_CTX9800_TAB. The same BAG_KEY is used as unique identifier for the bag. 
+
+Each record in the table holds the various modes, time out and expected inspection or IQ test, setup for the CTX9800 or by the Airport Interface at the time the bag was loaded into the CTX. To track the time spent into the machine the load and unload time are updated appropriately. For BMTT backward compatibility, the bag unload time (UNLOAD_TIME) is used in concordance with the timeout value (TIMEOUT) to detect BMTT expiration.
+
+When the bag data is ready (after acquisition or reconstruction), the bag folder is updated (raw or image) and the data is stored under the folder. The folder path is found in the BAG_ADMIN_TAB.
+In the future, the abort on screen resolution flag could be used in place of BMTT.
+
+#### **17.2.1	BAG_CTX9800_TAB Schema**
+| FIELDS  | DATA TYPE  | DESCRIPTION  | UPDATE  | SOURCE  |
+|---|---|---|---|---|
+| BAG_KEY  | INTEGER  | Global Unique Identifier for the bag  | Record creation on new bag event  | BAG_TAB  |
+| INSP_TYPE  | INTEGER  | Inspection or Image Quality Type.  Index in APP_TYPE_TAB  | MC  | MACH_STATE_CTX_TAB or AI-BHS  |
+| SHOW_MODE  | BOOL  | Show Mode On/Alarm or Off /All).  | MC  | MACH_STATE_CTX_TAB or AI-BHS  |
+| DEC_MODE  | BOOL  | Auto Decision Mode On or Off  | MC  | MACH_STATE_CTX_TAB or AI-BHS  |
+| DS_MODE  | BOOL  | Dynamic Switching Mode On or Off  | MC  | MACH_STATE_CTX_TAB or AI-BHS  |
+| DC_MODE  | BOOL  | Data Collection Mode On or Off  | MC  | MACH_STATE_CTX_TAB  |
+| SC_MODE  | BOOL  | SELECTEE Mode On or Off  | MC  | AI-BHS  |
+| TIMEOUT  | INTEGER  | Bag Maximum Travel Time (BMTT)  | MC  | MACH_STATE_CTX_TAB or AI-BHS  |
+| LOAD_TIME  | DATETIME  | Load Bag Time (mm-dd-yy hh:mm:ss creation time of the record)  | MC  |   MC  |
+| UNLOAD_TIME  | DATETIME  |  Unload Bag Time (mm-dd-yy hh:mm:ss) used for BMTT | MC  | MC  |
+| FOLDER_NAME  | CHAR [120]  |  Image Bag Folder Name on the data store. Something like: MACHNAME.BAGID.TRACKNUM.MMDDYYHHMNSS (null value allowed) | RECON  | BAG_TAB and BAG_CTX_TAB  |
+| RAWFOLDER_NAME  | CHAR [120]  | Bag folder name for raw data (null value allowed)  | ACQ  |  BAG_TAB and BAG_CTX_TAB |
+| ABORT_OSR  | BOOL  | Abort On Screen Resolution. Flag for TRI for future use (Alternative to BMTT)  |  AI |  AI |
+
+#### **17.2.2	Example of BAG_CTX9800_TAB**
+In the following example, the data for bag #12356 can be found under the folder \bag\image\G101.IATA34.T1769.111206072015. Bag #12357 has no data because in fault. Bag #14567 has a complete set of data under the folder \bag\image\G123.IATA07.45673A.111206071016.
+
+| BAG_KEY  | INSP_TYPE  | SHOW_MODE  | DEC_MODE  | DS_MODE  | DC_MODE  | SC_MODE  | TIMEOUT  | LOAD_TIME  | UNLOAD_TIME  | FOLDER_NAME  |
+|---|---|---|---|---|---|---|---|---|---|---|
+| ...  |   |   |   |   |   |   |   |   |   |   |
+| 12356  | 1  | Off  | Off  | Off  | Off  | Off  | 60  | 11-12-06 07:20:03  | 11-12-06 07:20:18  | G101.IATA34.T1769.11206072015  |
+| 12357  | 2  | Off | Off  | Off  | Off  | Off  | 60  | 11-12-06 07:20:23  |  11-12-06 07:32:11 |  0 |
+| 14567  | 1  | On  | On  | Off  |  Off | Off  | 30  | 11-12-06 07:10:12  | 11-12-06 07:10:23  | G123.IATA07.45673A.111206071016  |
+| ...  |   |   |   |   |   |   |   |   |   |   |
 
 
 
