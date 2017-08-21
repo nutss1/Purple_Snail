@@ -758,7 +758,8 @@ In the following example, 3 users are registered with the database: Joe is activ
 | 14  | Admin  | 4  |  @#$22113 | Yes  |
 | ...  |   |   |   |   |
 
-# **17.	Dynamic Tables**
+## **17.	Dynamic Tables**
+### **17.1	BAG MANAGEMENT**
 The BAG_TAB holds information for at least 48 hours for all bags that have been registered with the data center.
 
 When a bag is loaded into a machine (9800, 9400, XRD…) belonging to the system (referenced by a record in MACH_ADMIN_TAB), a new bag event triggers the creation of bag record in the BAG_TAB and in the bag-machine specific table (BAG_CTX9800_TAB, BAG_CTX9400_TAB, BAG_XRD_TAB… see below).
