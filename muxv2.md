@@ -1174,12 +1174,43 @@ Run
 
 ### **19.8	Example:**
 #### **19.8.1	Deriving from Helper Class**
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/25.PNG "Logo Title Text 1")
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/26.PNG "Logo Title Text 1")
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/27.PNG "Logo Title Text 1")
 
-
-
-
+#### **19.8.2	Setting Monitor Details:**
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/28.PNG "Logo Title Text 1")
+#### **19.8.3	Call Initialization**
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/29.PNG "Logo Title Text 1")
+#### **19.8.4	Send data to all Remote Objects**
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/30.PNG "Logo Title Text 1")
+#### **19.8.5	Send data to one particular Remote Object**
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/31.PNG "Logo Title Text 1")
+#### **19.8.6	Receive data from any of Remote Objects**
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/32.PNG "Logo Title Text 1")
+#### **19.8.7	Call Destruction method**
+    Mon::Destroy();
     
+### **19.9	CL classes ref**
+#### **19.9.1	CTX State Enum**
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/33.PNG "Logo Title Text 1")
+
+#### **19.9.2	CTX Status Structure**
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/34.PNG "Logo Title Text 1")
     
+**Bag Lib**
+
+### **19.10	Bag Data Model**
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/35.PNG "Logo Title Text 1")
+
+### **19.11	Class Diagram**
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/36.PNG "Logo Title Text 1")
+
+### **19.12	Class Diagram (cont…)**
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/37.PNG "Logo Title Text 1")
+
+## **20. Interaction Model**
+ACQ- (as a bagsender)
 
 
 
