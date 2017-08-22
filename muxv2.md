@@ -1073,3 +1073,113 @@ To be defined by new Training Simulator requirements
 To be defined by new Training Simulator requirements
 
 
+15. 
+16. Core:
+
+**DBif**
+Purpose to provide a layer to access DB for the rest of MUX API. 
+Suppose to encapsulate  
+-	Consistency/Retry on error functionality , 
+-	Database FAILOVER functionality 
+
+Usecases:
+1.	RAIN1 is always the master DB (holds MUX system counters and unique id)
+2.	In case RAIN1 is inaccessible RAIN2 is mater, than RIAN3
+3.	The scenario above is hardcoded
+
+Layout:
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/16.PNG "Logo Title Text 1")
+
+Master  mode is only a blocking call
+
+Slave – results are truncated (dbsql query is executed with active queue object)
+
+Classes:
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/17.PNG "Logo Title Text 1")
+
+Configuration Parameters in Platform.xml 
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/18.PNG "Logo Title Text 1")
+
+### **Control Lib**
+Communication Library (CL) is an API for communication purposes between all other modules such as CI, INSP, ACQ, MC, RECON, etc.
+
+CL has designed as set of structures, set of methods to call with the structures during communication process and set of methods for initialization. 
+
+This document describes the internal structure of CL and its design behavior, and points out how CL can be extended in order to change its behavior or add new features.
+
+We put special attention to show how to use CL for MC communication.
+
+## **19. CL building blocks**
+### **19.1	Core classes**
+In order to make it easier to work with the CL, we have created a few classes that give basic functionality needed throughout all of communication process. 
+
+We refer to these classes as CL core classes. They have been implemented in the CL namespace, and their source code is in $COMMON_LIB_DIR/src/monitor. 
+
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/19.PNG "Logo Title Text 1")
+
+
+**CL::Model:**	The base class for all modules which suppose to perform some activity and to be monitored by other process.  Contains abstract call back functions 
+
+**CL::View:**	the base class for control software which  performs monitoring for other modules activity as well as control those modules behavior
+.
+**CL::ProxyModel:** Base class for virtual representation of a monitored process. When we call a method on a Proxy Model, it automatically retransmitted over network and call appropriate method on a real object derived from CL::Model. 
+
+**CL::ProxyView:** Base class for virtual representation of a control software module. When a parent process has to notify other module it calls a method on a Proxy View, this call automatically retransmitted over network and call appropriate method on a real object derived from CL::View. 
+
+### **19.2	CL MonitorDetails class**
+There is a special class, which contains config information. In order to obtain correct configuration, the MonitorDetails member of core class must be initialized with module name and host name.  
+
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/20.PNG "Logo Title Text 1")
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/21.PNG "Logo Title Text 1")
+
+### **19.3	CL Core classes details**
+CL core class has next members:
+1.	MonitorDetails cfg  – contains current configuration of core class, such a name, type, corba location, auth data, etc. Use getMonitorDetails() / setMonitorDetails() to modify this object. Generally you don’t need to modify it unless during the initialization or configuration changing.
+
+2.	ModelPtrList models  - container for Proxy Objects. In most cases this is non-mutable list. It’s got filled up during Initialization. 
+
+3.	Mutex protector – protects all data members
+
+This is a typical structure of View class:
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/22.PNG "Logo Title Text 1")
+
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/23.PNG "Logo Title Text 1")
+
+### **19.4**
+### **19.5	CL Helper classes**
+CL contains a number of helper classes. The main reason of having them is to provide an implementation layer.  The core classes are very abstract. CL provides next classes: 
+- UIView – class for basic UserInterface/ControlInterface software. It contains callbacks function specifically designed for send generic commands like START/STOP/…, set config and receive status from model
+- McView – class for special MC Control Interface software. It contains callbacks function specifically designed for send device specific request as well as generic commands. It provides parsing of incoming messages and calls different callback functions depending on the message type.
+- MonModel – class for basic model, such as recon, inspection, acquisition, MC… It has implemented parsers for generic commands, abstract callback function to be called when the incoming message comes. Derives from CL::Model
+- McModel – class designed for MC model.  It has implemented parsers for devise specific MC commands as well as generic commands, and huge set of abstract callback function to be called when the incoming messages comes. Derives from CL::Model
+
+### **19.6	CL Factory class**
+There is a static factory class “Mon” which is basically a placeholder for initialization functions. It also contains static CORBA objects. They are used for communication purposes. 
+
+This is a Factory class. It constructs new Proxy Classes in Heap memory and passes ownership to the Core Classes. The Core Class will delete them during destruction.  
+
+For compatibility reason Mon::Init()  still returns pointers to objects but the caller suppose NOT TO delete them.
+Public methods:
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/24.PNG "Logo Title Text 1")
+
+### **19.7	CL Life runtime**
+At the application startup, several steps needs to be done: 
+- Derive from core class or helper class. Implement abstract callback functions, which are going to receive incoming messages.
+- Initialize Monitor Details for your class with hostname and Module type.
+- Call a factory method Init with your class as a parameter.
+
+Run
+
+- Call a factory method Destroy.
+
+### **19.8	Example:**
+#### **19.8.1	Deriving from Helper Class**
+
+
+
+
+    
+    
+
+
+
