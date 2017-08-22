@@ -926,6 +926,7 @@ Each record holds the configuration modes, inspection type and commands passed b
 
 #### **17.7.2	Example of MACH_CTRL_CTX_TAB**
 In the following example, G101 is set for remote scanning with EV100 inspection and a BMTT of 30 seconds for all bags scanned by this machine. The machine is fully integrated with all other modes set to off by the Control Interface. The last command passed to the machine was a fault reset.
+
 | MACH_ID  | MACH_CMD  | INSP_TYPE  | OPER_MODE  | ENTRY_MODE  | EXIT_MODE  | SHOW_MODE  | DEC_MODE  | DS_MODE  | DC_MODE  | TIMEOUT  |
 |---|---|---|---|---|---|---|---|---|---|---|
 | ...  |   |   |   |   |   |   |   |   |   |   |
