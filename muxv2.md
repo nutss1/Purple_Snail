@@ -841,7 +841,235 @@ In the following example, the data for bag #12356 can be found under the folder 
 | 14567  | 1  | On  | On  | Off  |  Off | Off  | 30  | 11-12-06 07:10:12  | 11-12-06 07:10:23  | G123.IATA07.45673A.111206071016  |
 | ...  |   |   |   |   |   |   |   |   |   |   |
 
+### **17.3	BAG MANAGEMENT CTX-9400 SPECIFIC (TBD)**
+The BAG_CTX9400_TAB holds information for at least 48 hours for all bags that have been loaded into a CTX9400 machine belonging to the system.
+| FIELDS  | DATA TYPE   | DESCRIPTION  | UPDATE  | SOURCE  |
+|---|---|---|---|---|
+| BAG_KEY  | INTEGER  | Global Unique Identifier for the bag  | Record creation on new bag event  | BAG_TAB  |
+| PSX_TYPE  | INTEGER  | Scan projection type  | MC  | Machine configuration  |
+| HI_MODE  | BOOL  | Hold Inside Mode On or Off).  | MC  | MACH_STATE_CTX_TAB or AI-BHS  |
+| …  |   |   |   |   |
 
+### **17.4	BAG MANAGEMENT XRD SPECIFIC (TBD)**
+The BAG_XRD_TAB holds information for at least 48 hours for all bags that have been loaded into a XRD machine belonging to the system.
 
+### **17.5	APPLICATION DECISION**
+The APP_DEC_TAB holds all decisions given to a bag by authorized subsystems (inspection, TRI/PTRI, XRD-inspection…). When a subsystem is ready to render a decision for a bag referenced by BAG_KEY (new decision event) it inserts a new record in the table specifying the decision, start end time, the type of application and a reference to the application or the user rendering the decision. 
+
+#### **17.5.1	APP_DEC_TAB Schema**
+| FIELDS  |  	DATA TYPE  | DESCRIPTION  | UPDATE  | SOURCE  |
+|---|---|---|---|---|
+| BAG_KEY  | INTEGER  | Global Unique Identifier for the bag  | Record creation on new decision event  |  BAG_TAB |
+| APP_DEC  | INTEGER  | Application Decision for the bag. Index in DECISION_TAB | INSP, IQ, TRI, PTRI, XRD, AT  | DECISION_TAB  |
+| APP_ID  | INTEGER  | Application ID (Inspection, IQ, TRI…) giving the decision.  Index in APP_ADMIN_TYPE  | INSP, IQ, TRI, XRD, AT  | APP_ADMIN_TAB  |
+| USER_ID  | INTEGER  | If Decision from operator, it’s user ID. Index in USER_ADMIN_TYPE (null value allowed)| TRI, PTRI  | USER_ADMIN_TAB  |
+| APP_START_TIME  | DATETIME  | Start Application Time (mm-dd-yy hh:mm:ss)  | INSP, IQ, TRI, PTRI, XRD, AT  | DB Clock  |
+| APP_END_TIME  | DATETIME  | End Application Time (mm-dd-yy hh:mm:ss)  | INSP, IQ, TRI, PTRI, XRD, AT  | DB Clock  |
+
+#### **17.5.2	Example of APP_DEC_TAB**
+In the following example, bag #14567 has been given a Suspect decision at 07:10:13 by the EV100 inspection running on PC80 but has been cleared by operator Jack from the TRI running on PC1 at 07:11:45. Since then, Jack has been deactivated.
+|  BAG_KEY |  APP_DEC |  APP_ID |  USER_ID | APP_START_TIME  |  APP_END_TIME |
+|---|---|---|---|---|---|
+| ...  |   |   |   |   |   |
+| 14567  | 1  | 71  | 0  | 11-12-06 07:10:09  | 11-12-06 07:10:13  |
+| 14567  | 2  | 45  | 13  | 11-12-06 07:10:34  | 11-12-06 07:11:45  |
+
+### **17.6	APPLICATION STATE**
+The APP_STATE_TAB holds heartbeat and status information for all applications running on the system. When an application starts it checks first in the APP_ADMIN_TAB for permissions (APP_NAME, APP_ACTIVE) and for an existing record in APP_STATE_TAB. If necessary, a new record is inserted. During its execution, the application updates its status (APP_STATUS) and heartbeat (APP_HB), which are monitored by the SCI. A hung application is detected when the heartbeat is older than the maximum number of seconds allowed (APP_MAX_HB). Applications that allow a user to log in must update the user ID (APP_USER_ID).
+
+#### **17.6.1	APP_STATE_TAB Schema**
+| FIELDS  | DATA TYPE  | DESCRIPTION  | UPDATE  | SOURCE  |
+|---|---|---|---|---|
+| APP_ID  | INTEGER  | Application ID. Index in APP_ADMIN_TAB  | Record creation at application startup  | APP_ADMIN_TAB  |
+| APP_MAX_HB  | INTEGER  | Maximum number of seconds between heartbeats before the application is seen as not running (the value is copied from APP_TYPE_TAB only to prevent excessive joins)  | Record creation  | APP_TYPE_TAB  |
+| APP_HB  | DATETIME  | Last Heartbeat Time (mm-dd-yy hh:mm:ss). Use in concordance with MAX_HB to detect hung application.  | SM, RECON, INSP TRI, PTRI, AI  | DB Clock  |
+| APP_STATUS  | INTEGER  | Application Status. Index in APP_STATUS_TAB  | SM, RECON, INSP TRI, PTRI, AI  | APP_STATUS_TAB  |
+| APP_USER_ID  | INTEGER  | For User Interface Applications capture the current user logged on. Index in USER_ADMIN_TAB (null value allowed)  | TRI, PTRI, SCI  | USER_ADMIN_TAB  |
+
+#### **17.6.2	Example of APP_STATE_TAB**
+In the following snapshot example (7:15:15), EV100 inspection instance #6 running on host PC80 is busy with the last check-in at 7:15:12 still valid until 07:15:16. 
+
+Recon instance #2 running on SERV1 is busy with the last check-in at 7:15:14 still valid until 07:15:19.  
+
+TRI instance #15 running on PC1 has user Joe logged-on with the last check-in at 7:15:14 still valid until 07:15:16. 
+
+Machine Control of G101 running on PC34 computer has been set in fault by SCI because the last check-in at 7:15:11 expired at 07:15:13. Therefore, the machine will need a software restart.
+
+| APP_ID  | APP_MAX_HB  | APP_HB  | APP_STATUS  | APP_USER_ID  |
+|---|---|---|---|---|
+| ...  |   |   |   |   |
+| 71  | 4  | 11.12.06 07:15:12  | 2  | 0  |
+| 8  | 5  | 11.12.06 07:15:14  | 2  | 0  |
+| 45  | 2  | 11.12.06 07:15:14  | 5  | 12  |
+| 4  | 2  | 11.12.06 07:15:11  | 4  | 0  |
+| ...  |   |   |   |   |
+
+### **17.7	MACHINE CONTROL CTX SPECIFIC**
+The MACH_CTRL_CTX_TAB holds the current control sent to machines by the SCI. Records are created at startup from the MACH_ADMIN_TAB on condition specify by MACH_INSTALL. Each time a new installation is made it triggers a new install event that insert a new record in the table. 
+
+Each record holds the configuration modes, inspection type and commands passed by a user from the SCI to the machine. For backward compatibility, the machine timeout can be adjusted from the SCI.
+
+#### **17.7.1	MACH_CTRL_CTX_TAB Schema**
+| FIELDS  | DATA TYPE  | DESCRIPTION  | UPDATE  | SOURCE  |
+|---|---|---|---|---|
+| MACH_ID  | INTEGER  | Machine ID. Index in MACH_ADMIN_TAB   | Record creation at DB Startup and new install event  | MACH_ADMIN_TAB  |
+| MACH_CMD  | INTEGER  | Last Command passed to the Machine. Index in MACH_CMD_TAB  | SCI  | Supervisor  |
+| MACH_INSP_TYPE  | INTEGER  | Inspection or Image Quality.  Index in APP_TYPE_TAB  | SCI  | Supervisor  |
+| MACH_OPER_MODE  | INTEGER  | Operational Mode of the machine. Index in MACH_OPER_TAB  | SCI  | Manager  |
+| MACH_ENTRY_MODE  | BOOL  | Entry Integrated On or Off  | SCI  | Manager  |
+| MACH_EXIT_MODE  | BOOL  | Exit Integrated On or Off  |   | Manager  |
+| MACH_SHOW_MODE  | BOOL  | Show Mode Alarm/On or All/Off  | SCI  | Supervisor  |
+| MACH_DEC_MODE  | BOOL  | Auto Decision Mode On or Off  | SCI  | Supervisor  |
+| MACH_DS_MODE  | BOOL  | Dynamic Switching Mode On or Off  | SCI  | Supervisor  |
+| MACH_DC_MODE  | BOOL  | Data Collection Mode On or Off  | SCI  | GE Personal  |
+| MACH_TIMEOUT  | INTEGER  | Maximum Travel Time for bags passing through the machine  | SCI  | Manager  |
+
+#### **17.7.2	Example of MACH_CTRL_CTX_TAB**
+In the following example, G101 is set for remote scanning with EV100 inspection and a BMTT of 30 seconds for all bags scanned by this machine. The machine is fully integrated with all other modes set to off by the Control Interface. The last command passed to the machine was a fault reset.
+| MACH_ID  | MACH_CMD  | INSP_TYPE  | OPER_MODE  | ENTRY_MODE  | EXIT_MODE  | SHOW_MODE  | DEC_MODE  | DS_MODE  | DC_MODE  | TIMEOUT  |
+|---|---|---|---|---|---|---|---|---|---|---|
+| ...  |   |   |   |   |   |   |   |   |   |   |
+| 22  | 3  | 1  | 0  | On  | On  | Off  | Off  | Off  | Off  | 30  |   
+| ...  |   |   |   |   |   |   |   |   |   |   |
+
+### **17.8	MACHINE STATE CTX SPECIFIC**
+The MACH_STATE_CTX_TAB holds the current state of machines. Records are created at startup with records of MACH_CTRL_CTX_TAB from the MACH_ADMIN_TAB on condition specify by MACH_INSTALL. Each time a new installation is made it triggers a new install event that insert a new record in the table. 
+
+Each record holds the configuration modes, inspection type, status and eventually error that the machine is currently set with. The machine timeout from the MACH_CTRL_CTX_TAB is used to assign a BMTT on a per bag basis. If Dynamic Switching mode is on then Show, mode Auto Decision mode and Inspection type could be provided by the Airport Interface through the Machine Control subsystem.
+
+#### **17.8.1	MACH_STATE_CTX_TAB Schema**
+| FIELDS  | DATA TYPE  | DESCRIPTION  | UPDATE  | SOURCE  |
+|---|---|---|---|---|
+| MACH_ID  | INTEGER  | Machine ID. Index in MACH_ADMIN_TAB   | Record creation at DB Startup and new install event  | MACH_ADMIN_TAB   |
+| MACH_STATUS  | INTEGER  | Index in MACH_STATUS_TAB  | SM/MC  |  SM/MC  |
+| MACH_ERROR  | INTEGER  | Error Index in case of machine Fault status. Index in MACH_ERROR_TAB  | SM/MC  | MACH_ERROR_TAB  |
+| MACH_INSP_TYPE  | INTEGER  | Inspection or Image Quality Type.  Index in APP_TYPE_TAB  | SM/MC  | MACH_CTRL_CTX_TAB or Machine Configuration (Startup) or AI-BHS  |
+| MACH_OPER_MODE  | INTEGER  | Operational Mode of the machine. Index in MACH_OPER_TAB  | SM  | MACH_CTRL_CTX_TAB or Machine Configuration (Startup)  |
+| MACH_ENTRY_MODE  | BOOL  | Entry Integrated On or Off  | SM  | MACH_CTRL_CTX_TAB or Machine Configuration (Startup)  |
+| MACH_EXIT_MODE  | BOOL  | Exit Integrated On or Off  | SM  | MACH_CTRL_CTX_TAB or Machine Configuration (Startup)  |
+| MACH_SHOW_MODE  | BOOL  | Current Show Mode Alarm/On or All/Off  | SM/MC  | MACH_CTRL_CTX_TAB or Machine Configuration (Startup) or AI-BHS  |
+| MACH_DEC_MODE  | BOOL  | Current Auto Decision Mode On or Off  | SM/MC  | MACH_CTRL_CTX_TAB or Machine Configuration (Startup) or AI-BHS  |
+| MACH_DS_MODE  | BOOL  | Current Dynamic Switching Mode On or Off  | SM  | MACH_CTRL_CTX_TAB or Machine Configuration (Startup)  |
+| MACH_DC_MODE  | BOOL  | Data Collection Mode On or Off  | SM  | MACH_CTRL_CTX_TAB or Machine Configuration (Startup)  |
+| MACH_TIMEOUT  | INTEGER  | Maximum Travel Time for bags passing through the machine  | SM  | Manager  |
+
+#### **17.8.2	Example of MACH_STATE_CTX_TAB**
+In the following example, G101 is remotely controlled with EV100 inspection settings and a BMTT of 30 seconds for all bags scanned by this machine. The machine is currently fully integrated with all other modes set to off. The machine is now executing a reset due to the last command.
+| MACH_ID  | MACH_STATUS| MACH_ERROR   | INSP_TYPE  | OPER_MODE  | ENTRY_MODE  | EXIT_MODE  | SHOW_MODE  | DEC_MODE  | DS_MODE  | DC_MODE  | TIMEOUT  |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| ...  |   |   |   |   |   |   |   |   |   |   |    |
+| 22  | 7  | 200  | 1  | 0  | On  | On  | Off  | Off  | Off  | Off  |  30  |
+| ...  |   |   |   |   |   |   |   |   |   |   |    |
+
+## **18.	FDR Tables**
+The FDR tables and data contains in the tables are imposed by the TSA. One of TSA assumption is that the bag id shall not repeat within a one-year period, which at this time cannot be guaranteed by all airports. The global unique identifier for bag (BAG_KEY) shall be used instead. For historical reason the FDT tables are EDS Bag Viewing Station oriented and less generic than the tables above.
+
+### **18.1	MACHINE BAG INFORMATION**
+The FDR_MACH_BAG_TAB holds information for each scanned bag and each Threat Image Projection (TIP) bag. Most of the data pertinent to bag scanned can be found in existing tables but the field’s names could be different to be compliant with existing FDR terminology. Scanned bags are of two types: Image Quality (IQ) or Real (RE). TIP bags could also be of two types: False Alarm (FA) or Improvised Explosive Device (IED).
+
+| FIELDS  | DATA_TYPE  | DESCRIPTION  |   
+|---|---|---|
+| BAG_KEY  | INTEGER  | Global Unique Identifier. Same as BAG_TAB.BAG_KEY for Non-TIP bag. TIP bags are assigned a unique key based on BAG_ADMIN_TAB when there are displayed.  |      
+| BAG_ID  | CHAR [16]  | Identification number of the bag. For non TIP bag, same as BAG_TAB.BAG_ID  |      
+| SECONDARY_BAG_ID  | CHAR [24]  | Secondary bag id. For non TIP bag, same as BAG_TAB.BAG_TRACK_NUM  |    
+| MACH_NAME  | CHAR [16]  | Identification number of the EDS also called “machine id”. For BAG_KEY (non-TIP bag), same as (BAG_TAB.MACH_ID, MACH_ADMIN_TAB.MACH_NAME)  |      
+| BAG_TYPE  | CHAR [2]  | Type of bag based on the following categories: FA (TIP), IED (TIP), IQ (Image Quality), RE (real). For BAG_KEY (non-TIP bag), deduced from BAG_CTX9800_TAB.INSP_TYPE  |      
+| SW_VERSION  | CHAR [24]  | Not Applicable. Instead there is INSP_VERSION and RECON_VERSION  |      
+| BAG_START_DATE_STAGE1  | DATE  | The date the bag entered the machine (mm-dd-yy) . For BAG_KEY (non-TIP bag), same as date extracted from BAG_CTX9800_TAB.LOAD_TIME  |      
+| BAG_START_TIME_STAGE1  | TIME  | The time the bag entered the machine (hh:mn:ss). For BAG_KEY (non-TIP bag), same as time extracted from BAG_CTX9800_TAB.LOAD_TIME  |      
+| BAG_START_DATE_STAGE2  | DATE  | Not Applicable  |    
+| BAG_START_TIME_STAGE2  | TIME  | Not Applicable  |      
+| INSP_VERSION  | CHAR [24]  | EDS inspection software identification. For BAG_KEY (non-TIP bag), same as (BAG_CTX9800_TAB.INSP_TYPE, APP_TYPE_TAB.APP_NAME)  |      
+| RECON_VERSION  | CHAR [24]  | EDS reconstruction software identification. For BAG_KEY (non-TIP bag), same as (BAG_CTX9800_TAB.INSP_TYPE, APP_TYPE_TAB.DEPEND_ON)  |      
+| MACH_DECISION  | INTEGER  | The decision “determined by the EDS”. For BAG_KEY (non-TIP bag), same as APP_DEC_TAB.APP_DEC when application is an inspection  |   
+| MACH_NUM_THREATS  | INTEGER  | Number of threats identify by the EDS  |   
+| MACH_NUM_SLICES  | INTEGER  | Not Applicable  |   
+
+### **18.2	TRI BAG INFORMATION**
+The FDR_TRI_BAG_TAB holds information for each scanned bag and each Threat Image Projection (TIP) bag viewed by a screener/operator.
+| FIELDS  | DATA_TYPE  | DESCRIPTION  |   
+|---|---|---|
+| BAG_KEY  | INTEGER  | Global Unique Identifier.  |   
+| TRI_NAME  | CHAR [24]  | Identification number of the EDS. For BAG_KEY (non-TIP bag), same as (APP_DEC_TAB.APP_ID, APP_ADMIN_TAB.APP_NAME) when application is a TRI  |      
+| USER_NAME  | CHAR [16]  | Identification login of the operator. For BAG_KEY (non-TIP bag), same as (APP_DEC_TAB.USER_ID, USER_ADMIN_TAB.USER_NAME) when application is a TRI  |     
+| USER_NUM_THREATS_VIEWED  | INTEGER  | Number of threats viewed by the operator  |      
+| USER_NUM_KEYSTROKES  | INTEGER  | Number of keystrokes used by the operator to resolve the bag  |     
+| USER_DECISION  | INTEGER  | The decision given by the operator. For BAG_KEY (non-TIP bag), same as APP_DEC_TAB.APP_DEC when application is a TRI  |      
+| USER_BAG_START_DATE  | DATE  | The date the bag was displayed on the TRI (mm-dd-yy). For BAG_KEY (non-TIP bag), same as date extracted from APP_DEC_TAB.APP_START_TIME  |     
+| USER_BAG_START_TIME  | TIME  | The time the bag was displayed on the TRI (hh:mn:ss). For BAG_KEY (non-TIP bag), same as time extracted from APP_DEC_TAB.APP_START_TIME  |      
+| USER_BAG_END_DATE  | DATE  | The date the bag was removed from the TRI (mm-dd-yy). For BAG_KEY (non-TIP bag), same as date extracted from APP_DEC_TAB.APP_END_TIME  |     
+| USER_BAG_END_TIME | TIME  | The time the bag was removed from the TRI (hh:mn:ss).. For BAG_KEY (non-TIP bag), same as time extracted from APP_DEC_TAB.APP_END_TIME  |      
+| USER_NUM_SLICES  | INTEGER  | Not Applicable  |    
+
+### **18.3	MACHINE EVENTS**
+The FDR_MACH_EVENTS_TAB holds information for each machine event. In this case, an event is a changing status of a machine.
+| FIELDS  | DATA_TYPE  | DESCRIPTION  |   
+|---|---|---|
+| EVENT_NAME  | CHAR [24]  | Event related to machine. From MACH_STATUS_TAB.STATUS  |      
+| MACH_NAME  | CHAR [16]  | Identification number of the EDS. From MACH_ADMIN_TAB.MACH_NAME  |     
+| EVENT_DATE  | DATE  | Date when the event occurred (mm-dd-yy)  |      
+| EVENT_TIME  | TIME  | Time when the event occurred (hh:mn:ss)  |     
+| EVENT_DETAIL  | VARCHAR [120]  | From MACH_STATUS_TAB.DESCRIPTION  |      
+
+### **18.4	TRI EVENTS**
+The FDR_TRI_EVENTS_TAB holds information for each TRI also called MUX event. In this case, an event is changing status of TRI.
+| FIELDS  | DATA_TYPE  | DESCRIPTION  |      
+|---|---|---|
+| EVENT_NAME  | CHAR [24]  | Event related to TRI system. From APP_STATUS_TAB.STATUS  |      
+| TRI_NAME  | CHAR [24]  | Identification number of the EDS. From APP_ADMIN_TAB.APP_NAME  |      
+| USER_NAME  | CHAR [16]  | Depending on the event (logoff, logon) name of the user  |      
+| EVENT_DATE  | DATE  | Date when the event occurred (mm-dd-yy)  |      
+| EVENT_TIME  | TIME  | Time when the event occurred (hh:mn:ss)  |      
+| EVENT_DETAIL  | VARCHAR [120]  | From APP_STATUS_TAB.DESCRIPTION  |
+
+### **18.5	SCI EVENTS**
+The FDR_SCI_EVENTS_TAB holds information for each MUX system event. In this case, an event is a command passed to a machine, a change in settings or administrative tasks like account creation…
+| FIELDS  | DATA_TYPE  | DESCRIPTION  |   
+|---|---|---|
+| EVENT_NAME  | CHAR [24]  | Event related to the CI, from APP_CMD_TAB.COMMAND.Other event related to SCI: administration, Supervision (TBD)|    
+| SCI_NAME  | CHAR [24]  | Identification number of the EDS. From APP_ADMIN_TAB.APP_NAME  |    
+| USER_NAME  | CHAR [16]  | Depending on the event (logoff, logon) name of the user  |    
+| EVENT_DATE  | DATE  | Date when the event occurred   |    
+| EVENT_TIME  | TIME  | Time when the event occurred (hh:mn:ss)  |    
+| EVENT_DETAIL  | VARCHAR [120]  | From APP_CMD_TAB.DESCRIPTION  | 
+
+### **18.6	THREAT ALARM INFORMATION**
+The FDR_THREAT_TAB holds information for each threat identified in a bag. As of today, threats are classified in the following categories: Shield (SH), Military (MI), Commercial (CO), Sheet (ST), TS (Thin Sheet), Bulk (BL) and Special (SP). A record shall be created for each threat and bag key duplicated.
+| FIELDS  | DATA_TYPE  | DESCRIPTION  |   
+|---|---|---|
+| BAG_KEY  | INTEGER  | For non-TIP bag, it is the Global Unique Identifier. Same as BAG_TAB.BAG_KEY  |   
+| THREAT_TYPE  | CHAR [2]  | Type of the threat, one of the following categories: Shield (SH), Military (MI), Commercial (CO), Sheet (ST), TS (Thin Sheet), Bulk (BL) and Special (SP).  |   
+| THREAT_WEIGHT  | DECIMAL  | The weight of the threat presented as measured by the system.  |   
+| ASSOCIATED_SLICES  | INTEGER  | Total number of slices associated to the threat  |   
+| NUM_VIEWED_SLICES  | INTEGER  | Total number of associated slice which have been viewed by the user  |   
+
+### **18.7	USER FUNCTION KEYSTROKE INFORMATION**
+The FDR_KEYSTROKE_TAB holds information on which function keystroke is used for a given bag. If multiple keystrokes are used, a record shall be created for each of them and bag key duplicated.
+
+| FIELDS  | DATA_TYPE  | DESCRIPTION  |    
+|---|---|---|
+| BAG_KEY  | INTEGER  | Global Unique Identifier. Same as BAG_TAB.BAG_KEY for Non-TIP bag. TIP bags are assigned a unique key based on BAG_ADMIN_TAB when there are displayed.  |    
+| KEYSTROKE_TYPE  | CHAR [2]  | Function key used: Color of threat (CT), Sharpen Image (SI)… TBD|    
+| KEYSTROKE_DATE  | DATE  | Date (mm-dd-yy) the function keystroke was used  |   
+| KEYSTROKE_TIME  | TIME  | Time (hh:mn:ss) the function keystroke was used  |    
+
+### **18.8	THREAT IMAGE PROJECTION (TIP) INFORMATION (TBD)**
+Information for TIP images 
+
+| FIELDS  | DATA_TYPE  | DESCRIPTION  |  
+|---|---|---|
+| BAG_KEY  | INTEGER  | Global Unique Identifier for the associated TIP bag  |      
+| MACH_NAME  | CHAR [16]  | ?  |      
+| TIP_ID  | CHAR [10]  | TIP bag identification (equivalent of BAG_ID/IATA for real bag)  |      
+| THREAT_TYPE  | CHAR [2]  | Type of threat presented: Shield (SH), Military (MI), Commercial (CO), Sheet (ST), TS (Thin Sheet), Bulk (BL) and Special (SP).  |      
+| THREAT_SUBTYPE  | CHAR [2]  | For Bulk explosive, type of item presented: BB for bag as bomb, CE for contained electronic, CO for contain other, OP for open, SP for sympatic  |      
+| WEIGHT_TYPE  |  CHAR [2] | For Bulk explosive, weight of the explosive mass presented in IED TIP: LT for less than 100%, EQ for 100%, GT for greater than 100%  |   
+| THREAT_RATIO  | INTEGER  | Percentage of current threat (IEDs and shields) TIP images presented relative to all other TIP images  |      
+| FA_RATIO  | INTEGER  | Percentage of non-threat false alarm TIP images presented relative to all other TIP images  |      
+
+### **18.9	ON THE JOB TRAINING (OJT) INFORMATION (TBD)**
+To be defined by new Training Simulator requirements
+### **18.10	OPERATOR QUALIFICATION TEST (OQT) INFORMATION (TBD)**
+To be defined by new Training Simulator requirements
 
 
