@@ -1089,14 +1089,14 @@ Usecases:
 3.	The scenario above is hardcoded
 
 Layout:
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/16.PNG "Logo Title Text 1")
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/49.PNG "Logo Title Text 1")
 
 Master  mode is only a blocking call
 
 Slave – results are truncated (dbsql query is executed with active queue object)
 
 Classes:
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/17.PNG "Logo Title Text 1")
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/50.PNG "Logo Title Text 1")
 
 Configuration Parameters in Platform.xml 
 ![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/18.PNG "Logo Title Text 1")
@@ -1212,6 +1212,275 @@ Run
 
 ## **20. Interaction Model**
 ACQ- (as a bagsender)
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/38.png "Logo Title Text 1")
+
+Recon  - as a Bag Receiver
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/39.png "Logo Title Text 1")
+
+Recon – as a Bag saver
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/40.PNG "Logo Title Text 1")
+
+### **20.1	Communication/Configuration**
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/41.PNG "Logo Title Text 1")
+
+
+**Error Lib**
+
+**THE PURPOSE:**
+Error Lib is to HOLD list error numbers and corresponding description information in form of easy to use enums.
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/42.PNG "Logo Title Text 1")
+
+List of  Major Severities and monitoring actions:
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/43.PNG "Logo Title Text 1")
+Monitoring process is usually external process to System Software which generates the error. 
+
+ERRORLIB + CONROLLIB: 
+There are 2 fields in CL::CtxStatusStruct : 
+long EdsMsgCode; (Error code goes here )
+std::string EdsMsgArg (extra string goes here to be placed instead of wildcard sigh if any exists in Error Message)
+
+17. Auth
+    
+**Overview**
+AuthLib consist from 2 core components: DB and C++ API for Authentication and Authorization. Also there is C++ API for accounting/management 
+
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/44.PNG "Logo Title Text 1")
+
+**Authentication API is 3 methods :**
+int  LogUserOn      (Session* NewSession, LogonInfo* UserLogonInfo) , 
+virtual int  LogUserOn      (Session* NewSession, LogonInfo* UserLogonInfo) ,
+ bool isLogged       (Session* ManagerSession)  (to keep session alive). 
+
+**Authorization API has next method:**
+bool hasPrivilege   (Session* ManagerSession, const char* PrivKey) 
+
+**Accounting API has next methods:**  
+Int CreateUser     (Session* ManagerSession, UserProfile* UProfile)
+Int CreateGroup    (Session* ManagerSession, GroupProfile* GProfile)
+Int AssignGroup(UserProfile* UProfile, GroupProfile* GProfile) 
+int CreatePriv     (Session* ManagerSession, PrivProfile* PProfile )
+int  setPrivilege(PrivProfile* PProfile,  const char* PrivKey,  const char* PrivDescr = NULL )
+int AssignPriv(GroupProfile* GProfile, PrivProfile* PProfile )
+
+**Roles Schema**
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/45.PNG "Logo Title Text 1")
+
+List of default privileges (inserted into database at installation time)
+|GROUP |  ID | PRIVILEGE|
+|---|---|---|
+|Z	|22 |Can run CI
+|Z	|23	|Can run Active TRI
+|Z	|24	|Can run Passive TRI
+|Z	|25	|Can run ViewLink
+|Z	|26	|Can run Training Simulator
+|Z	|27	|Can run FDR
+|Z	|28	|Can read internal message
+|Z	|29	|Can update CTX configuration
+|Z	|30	|Can create/edit/remove users
+|Z	|31	|Can update INVISION level users
+|Z	|32	|Can update MANAGER level users
+|Z	|33	|Can update SUPERVISOR level users
+|Z	|34	|Can update OPERATOR level users
+|Z	|37	|Can update LOCKOUTFIXER level users
+|Z	|38	|Can update VIEWER level users
+|Z	|39	|Can issue commands to CTX
+|Z	|40	|Can set CTX into Radiation Survey modes
+|Z	|41	|Can view all messages in CI
+|Z	|42	|Can Print FDR Reports
+|Z	|43	|Can access the operating system
+|Z	|44	|Can change the TRI configuration
+|Z	|45	|Can save the default TRI configuration
+|Z	|46	|Can update the Training Simulator configuration
+|Z	|47	|Can run TS in Operational Training mode
+|Z	|48	|Can run TS in Alarm Resolution mode
+|Z	|50	|Can access the Training Simulator configuration menu
+|Z	|51	|Can edit TS bag data
+|Z	|55	|Can modify decision mode
+|Z	|56	|Can modify dyanmic screening
+|Z	|57	|Can modify inspection mode
+|Z	|58	|Can modify saving raw data
+|Z	|59	|Can modify show mode
+|Z	|60	|Can modify TRI operator viewing timeouts
+|Z	|61	|Can modify bag feed mode
+|Z	|62	|Can select the baggage scan operational mode
+|Z	|63	|Can select the conveyor operational mode
+|Z	|64	|Can select the Calib Tool Inspection mode
+|Z	|65	|Can select 9800 or 9800E mode
+|Z	|66	|Can select IQ Bag for inspection option
+|Z	|67	|Can Modify user password
+|Z	|68	|Can save bag from Active TRI
+|Z	|69	|Can select the radiation survey mode
+|Z	|70	|Can run custom TRIs, such as WTRI, etc.
+|Z	|71	|Can use mouse drag to calculate and show CT statistics.
+|Z	|72	|Can setup TRI levels and timeouts
+|Z	|73	|Can run level-2 TRI
+|Z	|74	|Can run level-3 TRI
+|Z	|75	|Can access SI
+|1	|22	|Can run CI
+|1	|23	|Can run Active TRI
+|1	|24	|Can run Passive TRI
+|1	|25	|Can run ViewLink
+|1	|27	|Can run FDR
+|1	|29	|Can update CTX configuration
+|1	|30	|Can create/edit/remove users
+|1	|32	|Can update MANAGER level users
+|1	|33	|Can update SUPERVISOR level users
+|1	|34	|Can update OPERATOR level users
+|1	|38	|Can update VIEWER level users
+|1	|39	|Can issue commands to CTX
+|1	|42	|Can Print FDR Reports
+|1	|55	|Can modify decision mode
+|1	|56	|Can modify dyanmic screening
+|1	|58	|Can modify saving raw data
+|1	|59	|Can modify show mode
+|1	|61	|Can modify bag feed mode
+|1	|62	|Can select the baggage scan operational mode
+|1	|63	|Can select the conveyor operational mode
+|1	|66	|Can select IQ Bag for inspection option
+|1	|68	|Can save bag from Active TRI
+|1	|70	|Can run custom TRIs, such as WTRI, etc.
+|1	|71	|Can use mouse drag to calculate and show CT statistics.
+|1	|73	|Can run level-2 TRI
+|1	|74	|Can run level-3 TRI
+|2	|22	|Can run CI
+|2	|23	|Can run Active TRI
+|2	|24	|Can run Passive TRI
+|2	|25	|Can run ViewLink
+|2	|27	|Can run FDR
+|2	|29	|Can update CTX configuration
+|2	|30	|Can create/edit/remove users
+|2	|33	|Can update SUPERVISOR level users
+|2	|34	|Can update OPERATOR level users
+|2	|38	|Can update VIEWER level users
+|2	|39	|Can issue commands to CTX
+|2	|55	|Can modify decision mode
+|2	|56	|Can modify dyanmic screening
+|2	|58	|Can modify saving raw data
+|2	|59	|Can modify show mode
+|2	|61	|Can modify bag feed mode
+|2	|62	|Can select the baggage scan operational mode
+|2	|63	|Can select the conveyor operational mode
+|2	|66	|Can select IQ Bag for inspection option
+|2	|70	|Can run custom TRIs, such as WTRI, etc.
+|2	|73	|Can run level-2 TRI
+|2	|74	|Can run level-3 TRI
+|3	|22	|Can run CI
+|3	|23	|Can run Active TRI
+|3	|24	|Can run Passive TRI
+|3	|39	|Can issue commands to CTX
+|3	|66	|Can select IQ Bag for inspection option
+|3	|70	|Can run custom TRIs, such as WTRI, etc.
+|3	|74	|Can run level-3 TRI
+
+**Linux PAM Module for MUX Authentication**
+Here are the core functionality that are provided/maintained in this redesign:
+- Integrate user credential validation with Linux System Login process such that user credentials are validated against authentication information stored in MUX database (i.e. the auth table).
+- Ensure that user login/logout events are captured in FDR.
+- Lock user if invalid user credentials are provided few times in a row.
+- Maintain user session when user logs into the desktop environment (i.e. ensure that the session table in MUX database is properly maintained.). 
+
+**Initial Design (mux-pam-auth.rpm)**
+Overview
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/46.PNG "Logo Title Text 1")
+
+Here are the main components: pam_muxv2, nss_muxv2, mux_session, nscd service
+
+The initial design for the core functionality was implemented by implementing the necessary C functions for the PAM and NSS modules as described below. The MUX auth-library was utilized to obtain user credentials and maintain user session. The FDR library was used to log FDR login/logout events. The Linux system's nscd.service was used to cache user credentials to minimize the number of hits to the MUX database on every call. The session for the user is maintained by a separate program called mux_session which is executed when user logs on to the system and terminated when user logs off from system. 
+
+Following PAM module functions were implemented: These functions are used by Linux system to validate user credentials and maintain user session.
+
+//responsible for validating user credentials
+int pam_sm_authenticate(pam_handle_t *pamh, int flags, int argc, const char **argv)
+//called after user credentials are validated to open login session.
+int pam_sm_open_session(pam_handle_t *pamh, int flags, int argc, const char **argv)
+//called when user logout even happens on the system.
+int pam_sm_close_session(pam_handle_t *pamh, int flags, int argc, const char **argv)
+
+Following NSS modules functions were implemented: These functions are used by Linux system to retrieve user and group information for a given user name/user id and group name/group id.
+
+//retrieve user password information for a given user name.
+enum nss_status _nss_muxv2_getpwnam_r( const char *name,
+ struct passwd *p,
+ char *buffer,
+ size_t buflen,
+ int *errnop)
+//retrieve user password information for a given user name.
+struct passwd* _nss_muxv2_getpwnam(const char* name)
+//retrieve user password information for a given user id.
+enum nss_status _nss_muxv2_getpwuid_r( uid_t uid, struct passwd *p,char *buffer, size_t buflen,size_t buflen)
+
+//retrieve group information for a given group name.
+nss_status _nss_muxv2_getgrnam_r( const char* name,
+ struct group *g,
+ char *buffer,
+ size_t buflen,
+ struct group **result)
+//retrieve group information for a given group name.
+struct group* _nss_muxv2_getgrnam(const char* name)
+//retrieve group information for a given group ID.
+nss_status _nss_muxv2_getgrgid_r( gid_t gid, struct group *g, char *buffer, size_t buflen, struct group **result)
+//retrieve group information for a given group ID.
+group* _nss_muxv2_getgrgid(gid_t gid)
+
+Issues with current Design
+
+1.	One of the core issue with current design is that the auth-library is currently directly being used in the PAM/NSS module. Since the auth-library directly initiates database calls, when the database connection is not available, the auth-library can take some time to respond. Another side effects is that each PAM/NSS function call initiates a new database connection and hence several database connection could be open during logon. This can potentially be a performance issue in a MUX environment. 
+2.	There is a corner case where a locked out user can login to the system when connection to the database is not available. This is because when the connection to the database is not available the Linux system falls back to use nscd service to check user credentials. The nscd service doesn't have logic for checking user lock out. 
+
+**New Design**
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/47.PNG "Logo Title Text 1")
+
+Here are the main components in the new design: pam_eds, nss_eds, mux-auth-svc
+
+The newly designed PAM module improves on the previous code by fixing the design flaws in the previous implementation. The direct use of MUX auth-library is now moved to a thrift service (mux-auth-svc) which is expected to locally runs on UI computer and cache user/group information from MUX database. The PAM/NSS module will use thrift call to initiate communication with the mux-auth-svc. This will address design issue #1 by moving the database calls into a separate service and utilizing thrift calls for which we have better control over defining timeout than the auth library. Furthermore, this refactoring will allow us to support authentication for training simulator more easily. We'll basically need to implement the thrift auth service for training simulator.
+
+The use of nscd service is now dropped in this new design. The mux-auth-svc will instead cache the user/group information periodically. The benefit of caching this information is that it will minimize database hits and provide similar functionality as nscd service. Furthermore, we are able to resolve issue #3, because our custom cache has information about whether the user is locked out which can be used to deny login access to locked out users when database connection is lost. With this new design, we take away the ability of the user to login to the system when connection to MUX database is not available and corresponding user/group information is not in the mux-auth-svc cache. 
+
+
+Source Code 
+eds-pam-auth.rpm : Implements generic EDS PAM module that talks to thrift service to retrieve user and group information.
+mux-auth-svc.rpm: Implements thrift service interface and obtains information from MUX database.
+
+18.	Fdr Lib
+2 components: C++ API and database 
+
+Usage :
+Fdr::SystemEvent sEvent;
+sEvent.SetMachineId( "H101");
+sEvent.SetEvent( "demoFdr::systemEvent");
+sEvent.SetEventDetail( "Testing Testing Testing");
+
+if ( ! sEvent.Send())
+   std::cout << "demoFdr::systemEvent:   Uh-Ho  Send didn't work" << std::endl;
+
+
+![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/48.PNG "Logo Title Text 1")
+
+19.	Misc: 
+    - Log lib
+    - SNMP lib
+    - Config
+	    - XMLConfig
+	    - EdsConfig
+    - Tools
+	    - DBTools
+	    - NetworkTools
+
+20.	Apps:
+	- Monitor
+	- Muxhost
+	- Nas
+	- TRI
+	- CI
+
+
+21.	WebApps:
+	- FDR
+	- SI
+22.	Bridges:
+	- MUXv1 Bridge 
+
+
 
 
 
