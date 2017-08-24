@@ -55,7 +55,7 @@
 | SRD968 | **3.2 Data Center** |     |
 | SRD1108 | The data center is the central part of the MuxV2 system. |    Information |
 | SRD1112 | The data center shall be composed of two parts, a postgres database and data storage system. Figure 1 belows shows an overview of the data center and it's interfaces. |  Requirement|
-| SRD1120 | ![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/1120.PNG "Logo Title Text 1") Figure 1 |   |
+| SRD1120 | ![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2954 "Logo Title Text 1") Figure 1 |   |
 | SRD1109 | **3.2.1 Database**|     |
 | SRD969 | The postgres database of the data center shall interface with the system components shown in Figure 1 providing fast access capability. |  Requirement   |
 | SRD1121 | It shall also be a gateway to the data storage for bag data retrieval for use by Active Threat Resolution Interfaces (ATRIs) and Passive Threat Resolution Interfaces (PTRI).  | Information    |
@@ -140,7 +140,7 @@
 | SRD1087 | The data center should store username and their associated attributes in an LDAP (Lightweight Directory Access Protocol) format. |  Optional Requirement   |
 | SRD1184 | The Authentication library should provide flexability to interface with Security Technology Integrated Program (STIP) used for remote maintenance monitoring. |  Optional Requirement   |
 | SRD1177 | Figure 2 below shows an overview of the authentication process. |  Information   |
-| SRD1179 | ![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/1179.PNG "Logo Title Text 1")|   Information  |
+| SRD1179 | ![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2955 "Logo Title Text 1")|   Information  |
 | SRD1180 | Figure 2 |  Information   |
 | SRD1172 | **12. Authorization** |     |
 | SRD994 | a. The system shall provide Manager access level.. |  Requirement   |
@@ -166,13 +166,13 @@
 
 # **Overview**
 The figure below describes the hardware layout with the new architecture
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/1.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2906 "Logo Title Text 1")
 The concept of a single highly available data store is replaced with a NAS pool. Each NAS in the pool has HDD’s configured in a redundant RAID setup and all the NASes together are treated as a redundant storage. The NAS pool is effectively a Redundant Array of Inexpensive NASes(RAIN).
 
 A high level illustration of how the redundancy is achieved is described below.
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/2.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2907 "Logo Title Text 1")
 Similarly, when a bag is read.
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/3.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2908 "Logo Title Text 1")
 Sequence of interactions between the various parts.
 
 ##### **14.1.1.1 Database Sequence**
@@ -195,8 +195,8 @@ Sequence of interactions between the various parts.
 - TRI updates database with bag decision and clears bag
 
 Bag status is modified to TRI-INSPECTED at this point.
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/4.PNG "Logo Title Text 1")
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/5.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2909 "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2910 "Logo Title Text 1")
 
 The figure above describes the flow of data to the Active TRI.
 
@@ -206,8 +206,8 @@ The figure above describes the flow of data to the Active TRI.
 - BagLib fetches the bag from the NAS set using the bag path
 - TRI displays the bag
 
- ![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/6.PNG "Logo Title Text 1")
- ![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/7.PNG "Logo Title Text 1")
+ ![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2911 "Logo Title Text 1")
+ ![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2912 "Logo Title Text 1")
 The figure above describes the flow of data to the Passive TRI.
 
 ##### **14.1.1.4 Scanner - Sequence**
@@ -224,7 +224,7 @@ The figure above describes the flow of data to the Passive TRI.
 The size of the queue and the values of the timers have to be worked out and maybe customized based on the scanner’s estimated throughput. Bags stay cached for the longest time possible – the current load on the scanner drives the deletion times of the bags from the queue. It is therefore possible that bags can be cached for a longer time during low throughput hours & at shift ends.
 
 The figure below describes the high-level interactions.
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/8.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2913 "Logo Title Text 1")
 
 ##### **14.1.1.5 NAS offline - Sequence**
 - Monitoring thread on each NAS checks every other NAS for read/write status
@@ -264,8 +264,8 @@ The next TRI which queries the db will find this bag, look for the state INSPECT
 If the flag is never set, the bag will be timed out by the bag cleanup monitoring (which will mark this bag as timed-out so that no TRI loads this bag – this is the same functionality that exists today)
 
 The figure below describes the software interactions between the scanner, the NAS and the TRI.
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/9.PNG "Logo Title Text 1")
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/10.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2914 "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2915 "Logo Title Text 1")
 
 ## **14. Database Schema**
 The lookup tables are index-organized with rows representing values to which other rows of non-lookup tables are pointing.  The lookup tables are created and populated when the database management system starts up from the DB configuration file.  The lookup tables could be seen as ”static” because they are modified only in rare occasion (adding a new type of machine for example) and are identical across data centers.
@@ -274,7 +274,7 @@ The administrative tables are created from MUX configuration files or by an admi
 
 The dynamic tables are a collection of records that control and report the status of machines, software applications and bags. Records are created from administrative tables for machines and software applications when the database management system starts up. Bags and decision records are inserted on new bag and new decision events. Each new bag event generates a bag record in a generic table and another in bag-machine specific table. There are as many bag-machine specific tables as type of sensors connected to the system.
 
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/11.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2916 "Logo Title Text 1")
 
 ## **15. Lookup tables**
 The lookup tables are index-organized tables with rows stored in primary key order. They are created from database configuration files depending of the release version of the database.
@@ -283,10 +283,10 @@ The lookup tables are index-organized tables with rows stored in primary key ord
 The status of a bag going through a CTX and requiring On Screen Resolution follows sequential steps (Figure 2). The BAG_STATUS_TAB holds the various status of a bag. Each status allows or blocks actions from specific subsystems that translate in a set of rules for the subsystems. For example, inspection subsystems process only bags reconstructed, TRI subsystem display only bag already inspected. The table could be extended to include bag status for other sensors like XRD…
 
 #### **15.1.1 BAG_STATUS_TAB Schema**
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/12.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2917 "Logo Title Text 1")
 
 #### **15.1.2 Bag Status Diagram**
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/13.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2918 "Logo Title Text 1")
 
 #### **15.1.3 Example of BAG_STATUS_TAB**
 | INDEX  | STATUS  |  DESCRIPTION |   
@@ -432,7 +432,7 @@ Each machine follows a state diagram (Figure 3). The MACH_STATUS_TAB holds the v
 |  DESCRIPTION |  VARCHAR [120] |  Status description: describes main tasks performed by the machine in this state |  Database configuration file |   
 
 #### **15.6.2 Machine Status Diagram**
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/14.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2919 "Logo Title Text 1")
 
 #### **15.6.3	Example of MACH_STATUS_TAB**
 |  INDEX |  STATUS |  DESCRIPTION |      
@@ -582,7 +582,7 @@ As for machine, each application goes through different states that can be found
 |  DESCRIPTION | VARCHAR [120]  |  Application status description: describes mostly if the application is healthy or not |  Database configuration file  |   
 
 #### **15.11.2	Application Status Diagram**
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/15.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2920 "Logo Title Text 1")
 
 #### **15.11.3	Example of APP_STATUS_TAB**
 |  INDEX |  STATUS |  DESCRIPTION |      
@@ -1089,17 +1089,17 @@ Usecases:
 3.	The scenario above is hardcoded
 
 Layout:
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/49.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2921 "Logo Title Text 1")
 
 Master  mode is only a blocking call
 
 Slave – results are truncated (dbsql query is executed with active queue object)
 
 Classes:
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/50.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2922 "Logo Title Text 1")
 
 Configuration Parameters in Platform.xml 
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/18.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2923 "Logo Title Text 1")
 
 ### **Control Lib**
 Communication Library (CL) is an API for communication purposes between all other modules such as CI, INSP, ACQ, MC, RECON, etc.
@@ -1116,7 +1116,7 @@ In order to make it easier to work with the CL, we have created a few classes th
 
 We refer to these classes as CL core classes. They have been implemented in the CL namespace, and their source code is in $COMMON_LIB_DIR/src/monitor. 
 
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/19.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2924 "Logo Title Text 1")
 
 
 **CL::Model:**	The base class for all modules which suppose to perform some activity and to be monitored by other process.  Contains abstract call back functions 
@@ -1130,8 +1130,8 @@ We refer to these classes as CL core classes. They have been implemented in the 
 ### **19.2	CL MonitorDetails class**
 There is a special class, which contains config information. In order to obtain correct configuration, the MonitorDetails member of core class must be initialized with module name and host name.  
 
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/20.PNG "Logo Title Text 1")
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/21.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2925 "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2926 "Logo Title Text 1")
 
 ### **19.3	CL Core classes details**
 CL core class has next members:
@@ -1142,9 +1142,9 @@ CL core class has next members:
 3.	Mutex protector – protects all data members
 
 This is a typical structure of View class:
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/22.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2927 "Logo Title Text 1")
 
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/23.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2928 "Logo Title Text 1")
 
 ### **19.4**
 ### **19.5	CL Helper classes**
@@ -1161,7 +1161,7 @@ This is a Factory class. It constructs new Proxy Classes in Heap memory and pass
 
 For compatibility reason Mon::Init()  still returns pointers to objects but the caller suppose NOT TO delete them.
 Public methods:
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/24.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2929 "Logo Title Text 1")
 
 ### **19.7	CL Life runtime**
 At the application startup, several steps needs to be done: 
@@ -1175,63 +1175,63 @@ Run
 
 ### **19.8	Example:**
 #### **19.8.1	Deriving from Helper Class**
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/25.PNG "Logo Title Text 1")
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/26.PNG "Logo Title Text 1")
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/27.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2930 "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2931 "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2932 "Logo Title Text 1")
 
 #### **19.8.2	Setting Monitor Details:**
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/28.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2933 "Logo Title Text 1")
 #### **19.8.3	Call Initialization**
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/29.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2934 "Logo Title Text 1")
 #### **19.8.4	Send data to all Remote Objects**
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/30.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2935 "Logo Title Text 1")
 #### **19.8.5	Send data to one particular Remote Object**
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/31.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2936 "Logo Title Text 1")
 #### **19.8.6	Receive data from any of Remote Objects**
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/32.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2937 "Logo Title Text 1")
 #### **19.8.7	Call Destruction method**
     Mon::Destroy();
     
 ### **19.9	CL classes ref**
 #### **19.9.1	CTX State Enum**
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/33.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2938 "Logo Title Text 1")
 
 #### **19.9.2	CTX Status Structure**
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/34.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2939 "Logo Title Text 1")
     
 **Bag Lib**
 
 ### **19.10	Bag Data Model**
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/35.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2940 "Logo Title Text 1")
 
 ### **19.11	Class Diagram**
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/36.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2941 "Logo Title Text 1")
 
 ### **19.12	Class Diagram (cont…)**
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/37.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2942 "Logo Title Text 1")
 
 ## **20. Interaction Model**
 ACQ- (as a bagsender)
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/38.png "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2943 "Logo Title Text 1")
 
 Recon  - as a Bag Receiver
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/39.png "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2944 "Logo Title Text 1")
 
 Recon – as a Bag saver
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/40.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2945 "Logo Title Text 1")
 
 ### **20.1	Communication/Configuration**
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/41.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2946 "Logo Title Text 1")
 
 
 **Error Lib**
 
 **THE PURPOSE:**
 Error Lib is to HOLD list error numbers and corresponding description information in form of easy to use enums.
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/42.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2947 "Logo Title Text 1")
 
 List of  Major Severities and monitoring actions:
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/43.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2948 "Logo Title Text 1")
 Monitoring process is usually external process to System Software which generates the error. 
 
 ERRORLIB + CONROLLIB: 
@@ -1244,7 +1244,7 @@ std::string EdsMsgArg (extra string goes here to be placed instead of wildcard s
 **Overview**
 AuthLib consist from 2 core components: DB and C++ API for Authentication and Authorization. Also there is C++ API for accounting/management 
 
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/44.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2949 "Logo Title Text 1")
 
 **Authentication API is 3 methods :**
 int  LogUserOn      (Session* NewSession, LogonInfo* UserLogonInfo) , 
@@ -1263,7 +1263,7 @@ int  setPrivilege(PrivProfile* PProfile,  const char* PrivKey,  const char* Priv
 int AssignPriv(GroupProfile* GProfile, PrivProfile* PProfile )
 
 **Roles Schema**
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/45.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2950 "Logo Title Text 1")
 
 List of default privileges (inserted into database at installation time)
 |GROUP |  ID | PRIVILEGE|
@@ -1381,7 +1381,7 @@ Here are the core functionality that are provided/maintained in this redesign:
 
 **Initial Design (mux-pam-auth.rpm)**
 Overview
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/46.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2951 "Logo Title Text 1")
 
 Here are the main components: pam_muxv2, nss_muxv2, mux_session, nscd service
 
@@ -1428,7 +1428,7 @@ Issues with current Design
 2.	There is a corner case where a locked out user can login to the system when connection to the database is not available. This is because when the connection to the database is not available the Linux system falls back to use nscd service to check user credentials. The nscd service doesn't have logic for checking user lock out. 
 
 **New Design**
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/47.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2952 "Logo Title Text 1")
 
 Here are the main components in the new design: pam_eds, nss_eds, mux-auth-svc
 
@@ -1454,7 +1454,7 @@ if ( ! sEvent.Send())
    std::cout << "demoFdr::systemEvent:   Uh-Ho  Send didn't work" << std::endl;
 
 
-![alt text](https://raw.githubusercontent.com/StephenWang123/Purple_Snail/master/48.PNG "Logo Title Text 1")
+![alt text](https://mdi.collab.net/sf/docman/do/downloadDocument/projects.mux_libs/docman.root.markdowns/doc2953 "Logo Title Text 1")
 
 19.	Misc: 
     - Log lib
